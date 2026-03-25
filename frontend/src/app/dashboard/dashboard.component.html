@@ -1,0 +1,69 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      🃏 Pokémon TCG
+    </div>
+    <div class="user-info">
+      <span class="user-name">{{ userName }}</span>
+      <button class="btn-logout" (click)="logout()">Sair</button>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="main-content">
+
+    <!-- Seção de upload -->
+    <div class="upload-section">
+      <h2>Adicionar Cartas</h2>
+      <div class="upload-card">
+        <input
+          type="file"
+          #fileInput
+          (change)="onFileSelected($event)"
+          accept="image/*"
+          style="display: none">
+        <button class="btn-upload" (click)="fileInput.click()">
+          📸 Enviar Foto
+        </button>
+        <p class="upload-hint">Tire uma foto das suas cartas e reconheça automaticamente</p>
+
+        <!-- Preview da imagem -->
+        <div *ngIf="previewUrl" class="preview">
+          <img [src]="previewUrl" alt="Preview">
+          <button class="btn-recognize" (click)="recognizeCards()" [disabled]="isLoading">
+            {{ isLoading ? 'Reconhecendo...' : '🔍 Reconhecer Cartas' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensagem de erro -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Lista de cartas reconhecidas -->
+    <div class="cards-section" *ngIf="cards.length > 0">
+      <h2>Minhas Cartas</h2>
+      <div class="cards-grid">
+        <div *ngFor="let card of cards" class="card-item">
+          <div class="card-image">🎴</div>
+          <div class="card-info">
+            <h3>{{ card.nome }}</h3>
+            <p>Coleção: {{ card.colecao }}</p>
+            <p>Nº: {{ card.numero }}</p>
+            <span class="badge" [class]="card.raridade | lowercase">{{ card.raridade }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensagem quando não tem cartas -->
+    <div *ngIf="cards.length === 0 && !isLoading" class="empty-state">
+      <p>✨ Nenhuma carta cadastrada ainda</p>
+      <p>Envie uma foto para começar sua coleção!</p>
+    </div>
+
+  </main>
+</div>

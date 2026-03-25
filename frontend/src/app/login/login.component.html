@@ -1,0 +1,66 @@
+<div class="login-container">
+  <div class="login-card">
+    
+    <!-- Logo -->
+    <div class="logo">
+      🃏 Pokémon TCG
+    </div>
+
+    <!-- Título -->
+    <h2>Bem-vindo</h2>
+    <p class="subtitle">Entre com suas credenciais</p>
+
+    <!-- Formulário -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email"
+          placeholder="seu@email.com"
+          class="form-control"
+          [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+        <small *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-message">
+          E-mail inválido
+        </small>
+      </div>
+
+      <!-- Senha -->
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input 
+          type="password" 
+          id="senha" 
+          formControlName="senha"
+          placeholder="••••••"
+          class="form-control"
+          [class.is-invalid]="loginForm.get('senha')?.invalid && loginForm.get('senha')?.touched">
+        <small *ngIf="loginForm.get('senha')?.invalid && loginForm.get('senha')?.touched" class="error-message">
+          Senha deve ter no mínimo 6 caracteres
+        </small>
+      </div>
+
+      <!-- Mensagem de erro -->
+      <div *ngIf="errorMessage" class="error-message text-center">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Botão Login -->
+      <button 
+        type="submit" 
+        class="btn-login" 
+        [disabled]="loginForm.invalid || isLoading">
+        {{ isLoading ? 'Entrando...' : 'Entrar' }}
+      </button>
+
+      <!-- Link para registro -->
+      <p class="register-link">
+        Não tem uma conta? 
+        <a href="#" (click)="goToRegister($event)">Criar conta</a>
+      </p>
+    </form>
+  </div>
+</div>
