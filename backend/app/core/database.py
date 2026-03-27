@@ -8,9 +8,18 @@ class Database:
 db = Database()
 
 def connect_to_mongo():
-    db.client = MongoClient(settings.mongodb_url)
-    db.db = db.client[settings.database_name]
-    print(f"✅ Conectado ao MongoDB: {settings.database_name}")
+    try:
+        # Cria o cliente com opções TLS explícitas
+        db.client = MongoClient(
+            settings.mongodb_url,
+            tls=True,
+            tlsAllowInvalidCertificates=True
+        )
+        db.db = db.client[settings.database_name]
+        print(f"✅ Conectado ao MongoDB: {settings.database_name}")
+    except Exception as e:
+        print(f"❌ Erro ao conectar ao MongoDB: {e}")
+        raise
 
 def close_mongo_connection():
     if db.client:
