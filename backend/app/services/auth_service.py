@@ -16,13 +16,17 @@ class AuthService:
         # Criar usuário
         user_dict = user.dict()
         user_dict["senha"] = get_password_hash(user_dict.pop("senha"))
-        
+        user_dict["ativo"] = self.verificarAtivacaoUsuario()
+        user_dict["admin"] = self.verificarPerfilUsuario()
+
         result = create_user(user_dict)
         
         return {
             "id": str(result.inserted_id),
             "email": user.email,
-            "nome": user.nome
+            "nome": user.nome,
+            "ativo": user_dict["ativo"],  
+            "admin": user_dict["admin"] 
         }
     
     def login(self, user: UserLogin):
@@ -45,3 +49,11 @@ class AuthService:
         access_token = create_access_token(data={"sub": user.email})
         
         return {"access_token": access_token, "token_type": "bearer"}
+
+    def verificarAtivacaoUsuario(self) -> bool:
+        # já adiciona false para o usuario
+        return False
+
+    def verificarPerfilUsuario(self) -> bool:
+        # já adiciona false para o usuario
+        return False
