@@ -13,3 +13,5 @@ class UserResponse(BaseModel):
     id: str
     email: str
     nome: str
+    ativo: bool
+    admin: bool
