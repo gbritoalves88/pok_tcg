@@ -19,5 +19,15 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        print("=" * 60)
+        print("🔧 VARIÁVEIS DE AMBIENTE CARREGADAS:")
+        print(f"MONGODB_URL: {self.mongodb_url}")
+        print(f"DATABASE_NAME: {self.database_name}")
+        print(f"SECRET_KEY: {self.secret_key[:20]}...")
+        print("=" * 60)
 
 settings = Settings()
