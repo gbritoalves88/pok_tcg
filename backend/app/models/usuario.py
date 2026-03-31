@@ -8,3 +8,10 @@ def get_user_by_email(email: str):
 
 def create_user(user_data: dict):
     return get_collection().insert_one(user_data)
+
+def update_user_status(email: str, ativo: bool):
+    """Atualiza o status (ativo/inativo) de um usuário"""
+    return get_collection().update_one(
+        {"email": email},
+        {"$set": {"ativo": ativo}}
+    )
