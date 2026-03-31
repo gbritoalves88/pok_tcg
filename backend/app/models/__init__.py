@@ -1,1 +1,1 @@
-from .usuario import get_user_by_email, create_user
+from .usuario import get_user_by_email, create_user, update_user_status
