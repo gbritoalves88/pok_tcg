@@ -15,3 +15,9 @@ class UserResponse(BaseModel):
     nome: str
     ativo: bool
     admin: bool
+
+class UserUpdateActive(BaseModel):
+    admin_email: str = Field(..., description="Email do administrador")
+    admin_senha: str = Field(..., description="Senha do administrador")
+    email: str = Field(..., description="Email do usuário")
+    ativo: bool = Field(..., description="Status: true = ativo, false = inativo")
