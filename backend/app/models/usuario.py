@@ -15,3 +15,10 @@ def update_user_status(email: str, ativo: bool):
         {"email": email},
         {"$set": {"ativo": ativo}}
     )
+
+def update_user_passoword(email: str, novasenha_hash: str, ativo: bool):
+    """Atualiza senha"""
+    return get_collection().update_one(
+        {"email": email},
+        {"$set": {"senha": novasenha_hash, "ativo": ativo}} 
+    )
