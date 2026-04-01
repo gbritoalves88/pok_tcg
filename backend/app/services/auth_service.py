@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
-from app.schemas import UserCreate, UserLogin, UserUpdateActive
-from app.models import get_user_by_email, create_user, update_user_status
+from app.schemas import UserCreate, UserLogin, UserUpdateActive, UserUpdatePassword
+from app.models import get_user_by_email, create_user, update_user_status, update_user_passoword
 from app.core.security import verify_password, get_password_hash, create_access_token
 
 class AuthService:
@@ -100,5 +100,27 @@ class AuthService:
             
         status_text = "ativado" if user.ativo else "desativado"
         return {"message": f"Usuário {user.email} {status_text} com sucesso"}
+
+    def atualizarPassawordUsuario(self, user: UserUpdatePassword):
+        # 1. Busca o admin
+        admin_user = get_user_by_email(user.email)
+        if not admin_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Administrador não encontrado"
+            )
+
+        novasenha_hash = get_password_hash(user.nova_senha)
+
+        # 2. Atualiza o status
+        result = update_user_passoword(user.email, novasenha_hash , False)
+        
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao atualizar senha"
+            )   
+            
+        return {"message": f"Atualização de senha do usuário {user.email}, atualizado com sucesso. Entre em contato com o Administrador para a ativação "}
 
 
