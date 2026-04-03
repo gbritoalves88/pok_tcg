@@ -60,7 +60,9 @@ class AuthService:
         # já adiciona false para o usuario
         return False
 
-    def atualizarStatusUsuario(self, user: UserUpdateActive):
+    def atualizarStatusUsuario(self, user: UserUpdateActive, bearer: str):
+
+        admin_emai = self.normalizarBearer(bearer)
         # 1. Busca o admin
         admin_user = get_user_by_email(user.admin_email)
         if not admin_user:
@@ -103,7 +105,10 @@ class AuthService:
         status_text = "ativado" if user.ativo else "desativado"
         return {"message": f"Usuário {user.email} {status_text} com sucesso"}
 
-    def atualizarPassawordUsuario(self, user: UserUpdatePassword):
+    def atualizarPassawordUsuario(self, user: UserUpdatePassword, bearer: str):
+
+        admin_emai = self.normalizarBearer(bearer)
+
         # 1. Busca o admin
         admin_user = get_user_by_email(user.email)
         if not admin_user:
