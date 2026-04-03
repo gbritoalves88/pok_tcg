@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from app.schemas import UserCreate, UserLogin, Token, UserResponse, UserUpdateActive, UserUpdatePassword
-from app.services import auth_service  # ← agora funciona!
+from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["autenticação"])
 
@@ -19,3 +19,7 @@ async def atualizar_status(user: UserUpdateActive):
 @router.post("/atualizar-senha")
 async def atualizar_senha(user: UserUpdatePassword):
     return auth_service.atualizarPassawordUsuario(user)
+
+@router.get("/usuario")
+async def buscar_usuario(Bearer: str = Header(...)):
+    return auth_service.buscarUsuario(Bearer)
