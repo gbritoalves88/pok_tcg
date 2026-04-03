@@ -25,3 +25,4 @@ class UserUpdateActive(BaseModel):
 class UserUpdatePassword(BaseModel):
     email: str = Field(..., description="Email do administrador", min_length=3)
     nova_senha: str = Field(..., description="Nova senha do administrador", min_length=6)
+
