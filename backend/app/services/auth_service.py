@@ -2,6 +2,8 @@ from fastapi import HTTPException, status
 from app.schemas import UserCreate, UserLogin, UserUpdateActive, UserUpdatePassword
 from app.models import get_user_by_email, create_user, update_user_status, update_user_passoword
 from app.core.security import verify_password, get_password_hash, create_access_token
+from jose import JWTError, jwt
+from app.config import settings
 
 class AuthService:
     
@@ -58,7 +60,9 @@ class AuthService:
         # já adiciona false para o usuario
         return False
 
-    def atualizarStatusUsuario(self, user: UserUpdateActive):
+    def atualizarStatusUsuario(self, user: UserUpdateActive, bearer: str):
+
+        admin_emai = self.normalizarBearer(bearer)
         # 1. Busca o admin
         admin_user = get_user_by_email(user.admin_email)
         if not admin_user:
@@ -101,7 +105,10 @@ class AuthService:
         status_text = "ativado" if user.ativo else "desativado"
         return {"message": f"Usuário {user.email} {status_text} com sucesso"}
 
-    def atualizarPassawordUsuario(self, user: UserUpdatePassword):
+    def atualizarPassawordUsuario(self, user: UserUpdatePassword, bearer: str):
+
+        admin_emai = self.normalizarBearer(bearer)
+
         # 1. Busca o admin
         admin_user = get_user_by_email(user.email)
         if not admin_user:
@@ -123,4 +130,47 @@ class AuthService:
             
         return {"message": f"Atualização de senha do usuário {user.email}, atualizado com sucesso. Entre em contato com o Administrador para a ativação "}
 
+
+    def buscarUsuario(self, Bearer: str) -> str:   
+        email = self.normalizarBearer(Bearer)
+        
+        if not email:
+            raise HTTPException(status_code=401, detail="Token inválido")
+
+        # 3. Busca o usuário no banco
+        user = get_user_by_email(email)
+            
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+
+        # 4. Retorna os dados (sem a senha)
+        return {
+            "id": str(user["_id"]),
+            "email": user["email"],
+            "nome": user["nome"],
+            "ativo": user.get("ativo", False),
+            "admin": user.get("admin", False)
+        }
+
+
+    def normalizarBearer(self, Bearer: str) -> str:
+        # 1. Remove o prefixo "Bearer " se existir
+        token = Bearer
+        if token.startswith("Bearer "):
+            token = token[7:]
+
+        # 2. Decodifica o token
+        try:
+            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            email = payload.get("sub")
+        
+            if not email:
+                raise HTTPException(status_code=401, detail="Token inválido")
+            
+            return email                    
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Token inválido ou expirado")
+            
 
