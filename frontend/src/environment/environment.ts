@@ -1,4 +1,8 @@
+const isProd = window.location.hostname !== 'localhost';
+
 export const environment = {
-  production: false,
-  endpoint: process.env['API_URL'] || 'http://localhost:8000'
+  production: isProd,
+  endpoint: isProd
+    ? 'https://pokemon-tcg-backend-xfbt.onrender.com'
+    : 'http://localhost:8000'
 };
