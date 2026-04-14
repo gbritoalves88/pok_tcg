@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  endpoint: 'http://localhost:8000'
+  endpoint: process.env['API_URL'] || 'http://localhost:8000'
 };
