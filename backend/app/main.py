@@ -12,13 +12,13 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:4200",      # Angular development
-        "http://localhost:8000",       # Backend
-        "https://pokemon-tcg-frontend.onrender.com",  # Produção
+        "http://localhost:4200",           # Angular development (local)
+        "http://localhost:8000",           # Backend local
+        "https://pok-tcg.onrender.com",    # Frontend em produção
     ],
     allow_credentials=True,
-    allow_methods=["*"],               # Permite todos os métodos (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],               # Permite todos os headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Eventos de startup/shutdown
