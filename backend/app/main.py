@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import connect_to_mongo, close_mongo_connection
 from app.routers import auth_router
 
@@ -6,6 +7,18 @@ app = FastAPI(
     title="Pokémon TCG API",
     description="API para catálogo de cartas Pokémon",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",      # Angular development
+        "http://localhost:8000",       # Backend
+        "https://pokemon-tcg-frontend.onrender.com",  # Produção
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],               # Permite todos os métodos (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],               # Permite todos os headers
 )
 
 # Eventos de startup/shutdown

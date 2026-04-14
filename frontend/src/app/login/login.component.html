@@ -1,6 +1,6 @@
 <div class="login-container">
   <div class="login-card">
-    
+
     <!-- Logo -->
     <div class="logo">
       🃏 Pokémon TCG
@@ -12,13 +12,13 @@
 
     <!-- Formulário -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      
+
       <!-- Email -->
       <div class="form-group">
         <label for="email">E-mail</label>
-        <input 
-          type="email" 
-          id="email" 
+        <input
+          type="email"
+          id="email"
           formControlName="email"
           placeholder="seu@email.com"
           class="form-control"
@@ -31,9 +31,9 @@
       <!-- Senha -->
       <div class="form-group">
         <label for="senha">Senha</label>
-        <input 
-          type="password" 
-          id="senha" 
+        <input
+          type="password"
+          id="senha"
           formControlName="senha"
           placeholder="••••••"
           class="form-control"
@@ -43,22 +43,17 @@
         </small>
       </div>
 
-      <!-- Mensagem de erro -->
-      <div *ngIf="errorMessage" class="error-message text-center">
-        {{ errorMessage }}
-      </div>
-
       <!-- Botão Login -->
-      <button 
-        type="submit" 
-        class="btn-login" 
+      <button
+        type="submit"
+        class="btn-login"
         [disabled]="loginForm.invalid || isLoading">
         {{ isLoading ? 'Entrando...' : 'Entrar' }}
       </button>
 
       <!-- Link para registro -->
       <p class="register-link">
-        Não tem uma conta? 
+        Não tem uma conta?
         <a href="#" (click)="goToRegister($event)">Criar conta</a>
       </p>
     </form>
