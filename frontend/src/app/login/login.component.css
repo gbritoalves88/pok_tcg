@@ -101,18 +101,12 @@ label {
   cursor: not-allowed;
 }
 
-/* Mensagens de erro */
+/* Mensagens de erro do formulário */
 .error-message {
   color: #e74c3c;
   font-size: 12px;
   margin-top: 6px;
   display: block;
-}
-
-.text-center {
-  text-align: center;
-  margin-top: 12px;
-  margin-bottom: 0;
 }
 
 /* Link de registro */
@@ -133,7 +127,7 @@ label {
   text-decoration: underline;
 }
 
-/* Animação */
+/* Animações */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -145,25 +139,112 @@ label {
   }
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== MODAL DE ERRO ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+.modal-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.modal-message {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.modal-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.modal-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
 /* Responsividade mobile */
 @media (max-width: 480px) {
   .login-card {
     padding: 24px 20px;
   }
-  
+
   h2 {
     font-size: 24px;
   }
-  
+
   .logo {
     font-size: 28px;
   }
-  
+
   .form-control {
     padding: 10px 14px;
   }
-  
+
   .btn-login {
     padding: 12px;
+  }
+
+  .modal-content {
+    padding: 24px 20px;
+    width: 85%;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .modal-icon {
+    font-size: 48px;
   }
 }
