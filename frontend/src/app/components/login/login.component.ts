@@ -88,4 +88,9 @@ export class LoginComponent {
     event.preventDefault();
     this.router.navigate(['/registro']);
   }
+
+  goToNewSenha(event: Event) {
+    event.preventDefault();
+    this.router.navigate(['/resete']);
+  }
 }

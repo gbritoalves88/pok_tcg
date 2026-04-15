@@ -105,9 +105,7 @@ class AuthService:
         status_text = "ativado" if user.ativo else "desativado"
         return {"message": f"Usuário {user.email} {status_text} com sucesso"}
 
-    def atualizarPassawordUsuario(self, user: UserUpdatePassword, bearer: str):
-
-        admin_emai = self.normalizarBearer(bearer)
+    def atualizarPassawordUsuario(self, user: UserUpdatePassword):
 
         # 1. Busca o admin
         admin_user = get_user_by_email(user.email)
