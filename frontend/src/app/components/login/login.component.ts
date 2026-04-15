@@ -1,4 +1,4 @@
-import { LoginService } from './../services/login.service';
+import { LoginService } from '../../services/login.service';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';

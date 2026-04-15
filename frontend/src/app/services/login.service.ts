@@ -55,4 +55,13 @@ export class LoginService {
         // Repassa o erro original para o componente tratar
         return throwError(() => error);
     }
+
+    registrar(nome: string, email: string, senha: string) {
+    const body = { nome, email, senha };
+
+    return this.apiService.post('auth/registrar', body).pipe(
+        map(response => response),
+        catchError(this.handleError)
+    );
+}
 }

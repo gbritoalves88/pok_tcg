@@ -1,0 +1,86 @@
+<div class="registro-container">
+  <div class="registro-card">
+
+    <!-- Logo -->
+    <div class="logo">
+      🃏 Pokémon TCG
+    </div>
+
+    <!-- Título -->
+    <h2>Criar Conta</h2>
+    <p class="subtitle">Preencha os dados abaixo para se cadastrar</p>
+
+    <!-- Formulário -->
+    <form [formGroup]="registroForm" (ngSubmit)="onSubmit()">
+
+      <!-- Nome -->
+      <div class="form-group">
+        <label for="nome">Nome</label>
+        <input
+          type="text"
+          id="nome"
+          formControlName="nome"
+          placeholder="Seu nome completo"
+          class="form-control"
+          [class.is-invalid]="registroForm.get('nome')?.invalid && registroForm.get('nome')?.touched">
+        <small *ngIf="registroForm.get('nome')?.invalid && registroForm.get('nome')?.touched" class="error-message">
+          Nome deve ter no mínimo 3 caracteres
+        </small>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="seu@email.com"
+          class="form-control"
+          [class.is-invalid]="registroForm.get('email')?.invalid && registroForm.get('email')?.touched">
+        <small *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched" class="error-message">
+          E-mail inválido
+        </small>
+      </div>
+
+      <!-- Senha -->
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input
+          type="password"
+          id="senha"
+          formControlName="senha"
+          placeholder="••••••"
+          class="form-control"
+          [class.is-invalid]="registroForm.get('senha')?.invalid && registroForm.get('senha')?.touched">
+        <small *ngIf="registroForm.get('senha')?.invalid && registroForm.get('senha')?.touched" class="error-message">
+          Senha deve ter no mínimo 6 caracteres
+        </small>
+      </div>
+
+      <!-- Botão Registrar -->
+      <button
+        type="submit"
+        class="btn-registro"
+        [disabled]="registroForm.invalid || isLoading">
+        {{ isLoading ? 'Cadastrando...' : 'Cadastrar' }}
+      </button>
+
+      <!-- Link para login -->
+      <p class="login-link">
+        Já tem uma conta?
+        <a href="#" (click)="goToLogin($event)">Fazer login</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL DE MENSAGEM -->
+<div *ngIf="mensagem" class="modal-overlay" (click)="fecharModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">{{ mensagemTitulo }}</div>
+    <div class="modal-message">{{ mensagem }}</div>
+    <button class="modal-button" (click)="fecharModal()">OK</button>
+  </div>
+</div>
