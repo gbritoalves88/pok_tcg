@@ -1,0 +1,71 @@
+<div class="resete-container">
+  <div class="resete-card">
+
+    <!-- Logo -->
+    <div class="logo">
+      🃏 Pokémon TCG
+    </div>
+
+    <!-- Título -->
+    <h2>Resetar senha</h2>
+    <p class="subtitle">Preencha os dados abaixo para resetar a senha</p>
+
+    <!-- Formulário -->
+    <form [formGroup]="reseteForm" (ngSubmit)="onSubmit()">
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="seu@email.com"
+          class="form-control"
+          [class.is-invalid]="reseteForm.get('email')?.invalid && reseteForm.get('email')?.touched">
+        <small *ngIf="reseteForm.get('email')?.invalid && reseteForm.get('email')?.touched" class="error-message">
+          E-mail inválido
+        </small>
+      </div>
+
+      <!-- Senha -->
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input
+          type="password"
+          id="senha"
+          formControlName="senha"
+          placeholder="••••••"
+          class="form-control"
+          [class.is-invalid]="reseteForm.get('senha')?.invalid && reseteForm.get('senha')?.touched">
+        <small *ngIf="reseteForm.get('senha')?.invalid && reseteForm.get('senha')?.touched" class="error-message">
+          Senha deve ter no mínimo 6 caracteres
+        </small>
+      </div>
+
+      <!-- Botão Registrar -->
+      <button
+        type="submit"
+        class="btn-resete"
+        [disabled]="reseteForm.invalid || isLoading">
+        {{ isLoading ? 'Atualizando...' : 'Atualizar' }}
+      </button>
+
+      <!-- Link para login -->
+      <p class="login-link">
+        Já tem uma conta?
+        <a href="#" (click)="goToLogin($event)">Fazer login</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL DE MENSAGEM -->
+<div *ngIf="mensagem" class="modal-overlay" (click)="fecharModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">{{ mensagemTitulo }}</div>
+    <div class="modal-message">{{ mensagem }}</div>
+    <button class="modal-button" (click)="fecharModal()">OK</button>
+  </div>
+</div>

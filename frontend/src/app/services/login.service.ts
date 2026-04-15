@@ -63,5 +63,14 @@ export class LoginService {
         map(response => response),
         catchError(this.handleError)
     );
-}
+    }
+
+    resete(email: string, nova_senha: string) {
+    const body = { email, nova_senha };
+
+    return this.apiService.put('auth/atualizar-senha', body).pipe(
+        map(response => response),
+        catchError(this.handleError)
+    );
+  }
 }
