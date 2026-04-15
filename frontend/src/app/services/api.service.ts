@@ -39,8 +39,14 @@ export class ApiService {
 
 
 
-  put<T>(endpoint: string, id: number, body: any): Observable<T> {
+  putId<T>(endpoint: string, id: number, body: any): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}/${endpoint}/${id}`, body).pipe(
+      catchError((err) => this.handleError(err))
+    );
+  }
+
+  put<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}/${endpoint}`, body).pipe(
       catchError((err) => this.handleError(err))
     );
   }
