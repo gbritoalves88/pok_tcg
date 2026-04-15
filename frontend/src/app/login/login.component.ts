@@ -50,7 +50,7 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading = false;
 
-        // Forma mais simples: alert()
+
         if (err.status === 401) {
           alert('❌ Email ou senha incorretos');
         } else if (err.status === 422) {
@@ -69,6 +69,7 @@ export class LoginComponent {
       next: (usuario) => {
         this.isLoading = false;
         if (usuario?.ativo === true) {
+          localStorage.setItem('usuario', JSON.stringify(usuario));
           this.router.navigate(['/dashboard']);
         } else {
           alert('❌ Usuário inativo. Aguarde ativação pelo administrador.');
