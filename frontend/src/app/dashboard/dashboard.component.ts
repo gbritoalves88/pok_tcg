@@ -26,13 +26,20 @@ export class DashboardComponent implements OnInit {
 
   constructor(private router: Router) {}
 
-  ngOnInit() {
-    // Recuperar nome do usuário do token (mock)
-    this.userName = 'Treinador';
 
-    // TODO: Carregar cartas do backend
-    this.loadCards();
+  ngOnInit() {
+    const usuarioSalvo = localStorage.getItem('usuario');
+    if (usuarioSalvo) {
+        const usuario = JSON.parse(usuarioSalvo);
+        this.userName  = usuario.nome;
+
+        this.loadCards();
+    } else {
+
+      this.logout();
+    }
   }
+
 
   logout() {
     // TODO: Remover token
