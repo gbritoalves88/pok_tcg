@@ -15,7 +15,7 @@
 
     <!-- Seção de upload -->
     <div class="upload-section">
-      <h2>Adicionar Cartas</h2>
+      <h2>Selecionar Foto</h2>
       <div class="upload-card">
         <input
           type="file"
@@ -24,7 +24,7 @@
           accept="image/*"
           style="display: none">
         <button class="btn-upload" (click)="fileInput.click()">
-          📸 Enviar Foto
+          📸 Selecionar Foto
         </button>
         <p class="upload-hint">Tire uma foto das suas cartas e reconheça automaticamente</p>
 
@@ -67,3 +67,31 @@
 
   </main>
 </div>
+
+<!-- MODAL DE SUCESSO (FORA DO CONTAINER) -->
+<div class="modal-overlay" *ngIf="modalSucesso">
+  <div class="modal-content">
+    <div class="modal-icon">🎉</div>
+    <div class="modal-title">Carta Identificada!</div>
+    <div class="modal-card">
+      <img [src]="cartaReconhecida?.imagem_url" alt="Carta" class="modal-card-img">
+      <div class="modal-card-info">
+        <p><strong>{{ cartaReconhecida?.nome }}</strong></p>
+        <p>Coleção: {{ cartaReconhecida?.set_nome }}</p>
+        <p>Confiança: {{ confiancaTexto }}</p>
+      </div>
+    </div>
+    <button class="modal-button" (click)="adicionarCarta()">Adicionar à Coleção</button>
+  </div>
+</div>
+
+<!-- MODAL DE ERRO (FORA DO CONTAINER) -->
+<div class="modal-overlay" *ngIf="modalErro">
+  <div class="modal-content error">
+    <div class="modal-icon">❌</div>
+    <div class="modal-title">Carta não reconhecida</div>
+    <div class="modal-message">{{ mensagemErro }}</div>
+    <button class="modal-button" (click)="fecharModalErro()">Tentar novamente</button>
+  </div>
+</div>
+
