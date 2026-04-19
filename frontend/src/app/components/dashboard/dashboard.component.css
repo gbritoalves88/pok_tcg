@@ -216,11 +216,6 @@
   color: #bf360c;
 }
 
-.badge.rara {
-  background: #ffb74d;
-  color: #bf360c;
-}
-
 /* Empty state */
 .empty-state {
   background: rgba(255, 255, 255, 0.9);
@@ -240,25 +235,105 @@
   .logo {
     font-size: 20px;
   }
-
   .user-name {
     font-size: 14px;
   }
-
   .btn-logout {
     padding: 6px 12px;
     font-size: 12px;
   }
-
   .main-content {
     padding: 20px 16px;
   }
-
   .cards-grid {
     grid-template-columns: 1fr;
   }
-
   .upload-card {
     padding: 20px;
   }
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+}
+
+.modal-content.error {
+  border-top: 4px solid #e74c3c;
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.modal-card {
+  display: flex;
+  gap: 16px;
+  text-align: left;
+  margin-bottom: 24px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 16px;
+}
+
+.modal-card-img {
+  width: 80px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.modal-card-info p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.modal-message {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.modal-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.modal-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
 }
