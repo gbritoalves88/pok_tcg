@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import connect_to_mongo, close_mongo_connection
-from app.routers import auth_router
+from app.routers import auth_router, reconhecimento_router  
 
 app = FastAPI(
     title="Pokémon TCG API",
@@ -32,6 +32,7 @@ async def shutdown():
 
 # Rotas
 app.include_router(auth_router)
+app.include_router(reconhecimento_router)  # ← ADICIONE ESTA LINHA!
 
 @app.get("/")
 async def root():
