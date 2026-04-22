@@ -3,7 +3,9 @@ import imagehash
 from PIL import Image
 import io
 import base64
+from app.services.auth_service import AuthService
 from app.models.carta import buscar_todas_cartas_catalogo
+from app.models import get_user_by_email
 
 def base64_para_bytes(base64_str: str) -> bytes:
     """Converte base64 para bytes"""
@@ -25,7 +27,15 @@ def calcular_hash_imagem_base64(imagem_base64: str) -> str:
     hash_obj = calcular_hash_imagem(imagem_bytes)
     return str(hash_obj)
 
-def reconhecer_carta(imagem_base64: str, limite: int = 15) -> dict:
+def reconhecer_carta(imagem_base64: str, bearer: str = None, limite: int = 15) -> dict:
+
+    auth = AuthService()
+    email_usuario = auth.normalizarBearer(bearer)
+    user = get_user_by_email(email_usuario)
+        
+    if not user:
+        raise HTTPException(401, "Usuário não encontrado")
+
     """
     Reconhece uma carta a partir da imagem em base64.
     

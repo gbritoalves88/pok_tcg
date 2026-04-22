@@ -32,3 +32,9 @@ class ReconhecerResponse(BaseModel):
     mensagem: str
     distancia: Optional[int] = None
     carta: Optional[CartaCatalogo] = None
+
+class AdicionarCartaRequest(BaseModel):
+    carta_id: str
+    imagem_original_base64: str
+    condicao: Optional[str] = None
+    observacao: Optional[str] = None
