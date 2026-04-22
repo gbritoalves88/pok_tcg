@@ -1,5 +1,6 @@
 # app/models/carta.py
 from app.core.database import get_database
+from datetime import datetime
 
 def get_catalogo_collection():
     return get_database()["cartas_catalogo"]
@@ -29,9 +30,6 @@ def limpar_catalogo():
     return get_catalogo_collection().delete_many({})
 
 # ========== CARTAS DO USUÁRIO (board) ==========
-def adicionar_carta_usuario(carta_data: dict):
-    """Adiciona uma carta ao board do usuário"""
-    return get_usuario_cartas_collection().insert_one(carta_data)
 
 def buscar_cartas_usuario(usuario_id: str):
     """Busca todas as cartas de um usuário"""
@@ -43,3 +41,9 @@ def buscar_carta_usuario_por_id(usuario_id: str, carta_id: str):
         "usuario_id": usuario_id,
         "carta_id": carta_id
     })
+
+def adicionar_carta_usuario(usuario_id: str, carta_data: dict):
+    """Adiciona uma carta à coleção do usuário"""
+    carta_data["usuario_id"] = usuario_id
+    carta_data["data_adicao"] = datetime.utcnow()
+    return get_usuario_cartas_collection().insert_one(carta_data)

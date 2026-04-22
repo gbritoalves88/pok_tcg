@@ -6,5 +6,8 @@ from .carta import (
     buscar_carta_catalogo_por_id,
     adicionar_carta_usuario,
     buscar_cartas_usuario,
-    buscar_carta_usuario_por_id
+    buscar_carta_usuario_por_id,
+    adicionar_carta_usuario,
+    buscar_cartas_usuario
+    
 )
