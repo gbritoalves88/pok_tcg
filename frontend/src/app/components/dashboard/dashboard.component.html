@@ -17,15 +17,33 @@
     <div class="upload-section">
       <h2>Selecionar Foto</h2>
       <div class="upload-card">
+        <!-- Input para arquivos (desktop) -->
         <input
           type="file"
           #fileInput
           (change)="onFileSelected($event)"
           accept="image/*"
           style="display: none">
-        <button class="btn-upload" (click)="fileInput.click()">
-          📸 Selecionar Foto
-        </button>
+
+        <!-- Input para câmera (celular) -->
+        <input
+          type="file"
+          #cameraInput
+          (change)="onFileSelected($event)"
+          accept="image/*"
+          capture="environment"
+          style="display: none">
+
+        <!-- Botões de seleção -->
+        <div class="button-group">
+          <button class="btn-upload" (click)="fileInput.click()">
+            📁 Selecionar da Galeria
+          </button>
+          <button class="btn-camera" (click)="openCamera()">
+            📸 Tirar Foto Agora
+          </button>
+        </div>
+
         <p class="upload-hint">Tire uma foto das suas cartas e reconheça automaticamente</p>
 
         <!-- Preview da imagem -->
@@ -33,6 +51,9 @@
           <img [src]="previewUrl" alt="Preview">
           <button class="btn-recognize" (click)="recognizeCards()" [disabled]="isLoading">
             {{ isLoading ? 'Reconhecendo...' : '🔍 Reconhecer Cartas' }}
+          </button>
+          <button (click)="limparPreview()" class="btn btn-secondary" [disabled]="!previewUrl">
+            🗑️ Limpar
           </button>
         </div>
       </div>
@@ -68,24 +89,29 @@
   </main>
 </div>
 
-<!-- MODAL DE SUCESSO (FORA DO CONTAINER) -->
+<!-- MODAL DE SUCESSO -->
 <div class="modal-overlay" *ngIf="modalSucesso">
   <div class="modal-content">
     <div class="modal-icon">🎉</div>
     <div class="modal-title">Carta Identificada!</div>
     <div class="modal-card">
-      <img [src]="cartaReconhecida?.imagem_url" alt="Carta" class="modal-card-img">
+      <div class="modal-card-img-container">
+        <img [src]="cartaReconhecida?.imagem_url" alt="Carta" class="modal-card-img">
+      </div>
       <div class="modal-card-info">
         <p><strong>{{ cartaReconhecida?.nome }}</strong></p>
         <p>Coleção: {{ cartaReconhecida?.set_nome }}</p>
         <p>Confiança: {{ confiancaTexto }}</p>
       </div>
     </div>
-    <button class="modal-button" (click)="adicionarCarta()">Adicionar à Coleção</button>
+    <div class="modal-buttons">
+      <button class="modal-button" (click)="adicionarCarta()">✅ Adicionar à Coleção</button>
+      <button class="modal-button-secondary" (click)="cartaNaoIdentificada()">❓ Carta não identificada</button>
+    </div>
   </div>
 </div>
 
-<!-- MODAL DE ERRO (FORA DO CONTAINER) -->
+<!-- MODAL DE ERRO -->
 <div class="modal-overlay" *ngIf="modalErro">
   <div class="modal-content error">
     <div class="modal-icon">❌</div>
@@ -94,4 +120,3 @@
     <button class="modal-button" (click)="fecharModalErro()">Tentar novamente</button>
   </div>
 </div>
-
