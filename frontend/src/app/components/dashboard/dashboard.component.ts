@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
@@ -20,6 +20,7 @@ interface Carta {
 })
 export class DashboardComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('cameraInput') cameraInput!: ElementRef<HTMLInputElement>;
 
   userName: string = '';
   previewUrl: string | null = null;
@@ -35,7 +36,11 @@ export class DashboardComponent implements OnInit {
   confiancaTexto = '';
   mensagemErro = '';
 
-  constructor(private router: Router, private cartaService: CartaService) {}
+  constructor(
+    private router: Router,
+    private cartaService: CartaService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     const usuarioSalvo = localStorage.getItem('usuario');
@@ -52,6 +57,12 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  openCamera() {
+    if (this.cameraInput) {
+      this.cameraInput.nativeElement.click();
+    }
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
@@ -59,37 +70,57 @@ export class DashboardComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.previewUrl = e.target?.result as string;
-        console.log('Preview carregado'); // Debug
+
+        this.cdr.detectChanges();
       };
       reader.readAsDataURL(this.selectedFile);
       this.errorMessage = '';
+      this.cdr.detectChanges(); // ✅ Força atualização imediata
     }
   }
 
+  // ✅ MÉTODO CORRIGIDO - Limpar preview
+  limparPreview() {
+    this.previewUrl = null;
+    this.selectedFile = null;
+    this.errorMessage = '';
+
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+
+    if (this.cameraInput) {
+      this.cameraInput.nativeElement.value = '';
+    }
+
+    this.cdr.detectChanges(); // ✅ Força atualização da UI
+    console.log('Preview limpo, UI atualizada');
+  }
+
   recognizeCards() {
-    console.log('Iniciando reconhecimento...'); // Debug
-    console.log('selectedFile:', this.selectedFile);
-    console.log('previewUrl:', this.previewUrl ? 'tem preview' : 'sem preview');
 
     if (!this.selectedFile) {
       console.log('Sem arquivo selecionado');
+      this.errorMessage = 'Selecione uma foto primeiro!';
+      this.cdr.detectChanges();
       return;
     }
 
     if (!this.previewUrl) {
       console.log('Sem preview');
       this.errorMessage = 'Erro ao carregar imagem. Tente novamente.';
+      this.cdr.detectChanges();
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
     const imagemBase64 = this.previewUrl;
 
     this.cartaService.reconhecerCarta(imagemBase64).subscribe({
       next: (response) => {
-        console.log('Resposta recebida:', response);
         this.isLoading = false;
 
         if (response.encontrada && response.carta) {
@@ -103,12 +134,14 @@ export class DashboardComponent implements OnInit {
             this.confiancaTexto = 'Baixa ⭐';
           }
 
-          console.log('Abrindo modal de sucesso');
           this.modalSucesso = true;
+          this.cdr.detectChanges();
+
         } else {
           this.mensagemErro = response.mensagem || 'Não foi possível identificar a carta. Tente outra foto.';
-          console.log('Abrindo modal de erro:', this.mensagemErro);
+          console.log('Abrindo modal de erro');
           this.modalErro = true;
+          this.cdr.detectChanges();
         }
       },
       error: (err) => {
@@ -116,18 +149,23 @@ export class DashboardComponent implements OnInit {
         this.isLoading = false;
         this.mensagemErro = 'Erro ao reconhecer carta. Tente novamente.';
         this.modalErro = true;
+        this.cdr.detectChanges();
       }
     });
   }
 
   adicionarCarta() {
-    // TODO: Implementar adição à coleção
-    console.log('Adicionando carta:', this.cartaReconhecida);
     this.fecharModalSucesso();
   }
 
+  cartaNaoIdentificada() {
+    this.mensagemErro = 'Obrigado pelo feedback! Vamos melhorar nosso sistema, tente incluir outra foto!';
+    this.fecharModalSucesso();
+    this.modalErro = true;
+    this.cdr.detectChanges();
+  }
+
   fecharModalSucesso() {
-    console.log('Fechando modal sucesso');
     this.modalSucesso = false;
     this.cartaReconhecida = null;
     this.previewUrl = null;
@@ -138,10 +176,15 @@ export class DashboardComponent implements OnInit {
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
+
+    if (this.cameraInput) {
+      this.cameraInput.nativeElement.value = '';
+    }
+
+    this.cdr.detectChanges();
   }
 
   fecharModalErro() {
-    console.log('Fechando modal erro');
     this.modalErro = false;
     this.mensagemErro = '';
     this.previewUrl = null;
@@ -151,10 +194,15 @@ export class DashboardComponent implements OnInit {
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
+
+    if (this.cameraInput) {
+      this.cameraInput.nativeElement.value = '';
+    }
+
+    this.cdr.detectChanges();
   }
 
   loadCards() {
     // TODO: Carregar cartas do usuário do backend
   }
-
 }
