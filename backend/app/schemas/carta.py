@@ -1,6 +1,8 @@
 # app/schemas/carta.py
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
+
+
 
 class CartaCatalogo(BaseModel):
     """Catálogo genérico de cartas (hash + dados oficiais)"""
@@ -34,7 +36,17 @@ class ReconhecerResponse(BaseModel):
     carta: Optional[CartaCatalogo] = None
 
 class AdicionarCartaRequest(BaseModel):
-    carta_id: str
-    imagem_original_base64: str
-    condicao: Optional[str] = None
-    observacao: Optional[str] = None
+    carta_id: str = Field(..., description="ID da carta no catálogo (ex: me3-3)")
+    condicao: Optional[str] = Field(None, description="Condição da carta")
+    observacao: Optional[str] = Field(None, max_length=500)
+    quantidade: int = Field(1, ge=1, le=100, description="Quantidade de cópias")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "carta_id": "me3-3",
+                "condicao": "Near Mint",
+                "observacao": "Primeira edição",
+                "quantidade": 1
+            }
+        }

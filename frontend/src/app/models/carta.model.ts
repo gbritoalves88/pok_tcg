@@ -16,6 +16,7 @@ export interface CartaCatalogo {
 }
 
 export interface ReconhecerResponse {
+    carta_id: string;
     encontrada: boolean;
     confianca?: 'excelente' | 'boa' | 'media';
     mensagem: string;
@@ -33,6 +34,9 @@ export interface CartaUsuario {
     condicao?: string;
     observacao?: string;
     data_adicao: string;
+    quantidade: number;
+    nome_carta: string;
+    imagem_url: string;
 }
 
 // ========== MOCK (para compatibilidade com o dashboard atual) ==========

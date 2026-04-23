@@ -2,13 +2,20 @@ import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@an
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
-import { CartaCatalogo } from '../../models/carta.model';
+import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/carta.model';
+
+
 
 interface Carta {
+  id?: string;
   nome: string;
   colecao: string;
   numero: string;
   raridade: string;
+  imagem_url?: string;
+  condicao?: string;
+  quantidade?: number;
+  data_adicao?: string;
 }
 
 @Component({
@@ -28,6 +35,7 @@ export class DashboardComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   cards: Carta[] = [];
+  cartaParaAdicionar: Partial<CartaUsuario> = {};
 
   // Modal
   modalSucesso = false;
@@ -35,6 +43,7 @@ export class DashboardComponent implements OnInit {
   cartaReconhecida: CartaCatalogo | null = null;
   confiancaTexto = '';
   mensagemErro = '';
+  mensagemSucesso: string = '';
 
   constructor(
     private router: Router,
@@ -134,6 +143,16 @@ export class DashboardComponent implements OnInit {
             this.confiancaTexto = 'Baixa ⭐';
           }
 
+          this.cartaParaAdicionar = {
+            carta_id: response.carta.id,
+            condicao: response.confianca || 'media',
+            observacao: `Reconhecida com confiança`,
+            quantidade: 1,
+            nome_carta: response.carta.nome,
+            imagem_url: response.carta.imagem_url
+          };
+
+
           this.modalSucesso = true;
           this.cdr.detectChanges();
 
@@ -155,7 +174,27 @@ export class DashboardComponent implements OnInit {
   }
 
   adicionarCarta() {
-    this.fecharModalSucesso();
+
+
+     this.cartaService.adicionarCartaColecao(this.cartaParaAdicionar?.carta_id, this.cartaParaAdicionar?.condicao , this.cartaParaAdicionar.observacao , this.cartaParaAdicionar?.quantidade).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+          this.fecharModalSucesso();
+          this.loadCards();
+          this.cdr.detectChanges();
+
+
+      },
+      error: (err) => {
+        console.error('Erro na requisição:', err);
+        this.isLoading = false;
+        this.mensagemErro = 'Erro ao reconhecer carta. Tente novamente.';
+        this.modalErro = true;
+        this.cdr.detectChanges();
+      }
+    });
+
   }
 
   cartaNaoIdentificada() {
@@ -202,7 +241,59 @@ export class DashboardComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  loadCards() {
-    // TODO: Carregar cartas do usuário do backend
-  }
+ loadCards() {
+  this.isLoading = true;
+
+  this.cartaService.buscarMinhasCartas().subscribe({
+    next: (response: any) => {
+      console.log('Resposta do backend:', response);
+
+      // O backend retorna diretamente um array (conforme seu exemplo)
+      // [{"id": "...", "carta_id": "...", ...}]
+      const cartas = Array.isArray(response) ? response : [];
+
+      if (cartas.length === 0) {
+        console.log('Nenhuma carta encontrada');
+        this.cards = [];
+        this.isLoading = false;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.cards = cartas.map((carta: any) => ({
+        id: carta.id,
+        nome: carta.nome || 'Carta sem nome',
+        colecao: carta.set_nome || 'Coleção desconhecida',
+        numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
+        raridade: this.getRaridadeTexto(carta.condicao),
+        imagem_url: carta.imagem_url,
+        condicao: carta.condicao,
+        quantidade: carta.quantidade || 1,
+        data_adicao: carta.data_adicao
+      }));
+
+      console.log('Cartas processadas:', this.cards);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    },
+    error: (err: any) => {
+      console.error('Erro ao carregar cartas:', err);
+      this.isLoading = false;
+      this.errorMessage = err.message || 'Erro ao carregar suas cartas. Tente novamente.';
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+  getRaridadeTexto(condicao: string): string {
+  const raridadeMap: { [key: string]: string } = {
+    'excelente': 'Lendária ⭐⭐⭐',
+    'boa': 'Rara ⭐⭐',
+    'media': 'Comum ⭐',
+    'near mint': 'Mint ⭐⭐⭐',
+    'mint': 'Mint ⭐⭐⭐'
+  };
+  return raridadeMap[condicao?.toLowerCase()] || 'Comum';
+}
+
 }

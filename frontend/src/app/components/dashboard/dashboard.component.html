@@ -66,15 +66,19 @@
 
     <!-- Lista de cartas reconhecidas -->
     <div class="cards-section" *ngIf="cards.length > 0">
-      <h2>Minhas Cartas</h2>
+      <h2>Minhas Cartas ({{ cards.length }})</h2>
       <div class="cards-grid">
         <div *ngFor="let card of cards" class="card-item">
-          <div class="card-image">🎴</div>
+          <div class="card-image">
+            <img *ngIf="card.imagem_url" [src]="card.imagem_url" [alt]="card.nome" class="card-img">
+            <div *ngIf="!card.imagem_url" class="card-placeholder">🎴</div>
+          </div>
           <div class="card-info">
             <h3>{{ card.nome }}</h3>
             <p>Coleção: {{ card.colecao }}</p>
             <p>Nº: {{ card.numero }}</p>
-            <span class="badge" [class]="card.raridade | lowercase">{{ card.raridade }}</span>
+            <p *ngIf="card.quantidade && card.quantidade > 1">Quantidade: {{ card.quantidade }}</p>
+            <span class="badge" [class]="card.condicao">{{ card.raridade }}</span>
           </div>
         </div>
       </div>
@@ -120,3 +124,4 @@
     <button class="modal-button" (click)="fecharModalErro()">Tentar novamente</button>
   </div>
 </div>
+
