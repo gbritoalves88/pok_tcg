@@ -59,10 +59,10 @@ export class LoginService {
     registrar(nome: string, email: string, senha: string) {
     const body = { nome, email, senha };
 
-    return this.apiService.post('auth/registrar', body).pipe(
-        map(response => response),
-        catchError(this.handleError)
-    );
+      return this.apiService.post('auth/registrar', body).pipe(
+          map(response => response),
+          catchError(this.handleError)
+      );
     }
 
     resete(email: string, nova_senha: string) {
