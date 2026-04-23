@@ -3,6 +3,7 @@ import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { RegistroComponent } from './components/registro/registro.component';
 import { ReseteComponent } from './components/resete/resete.component';
+import { AuthGuard } from './guards/auth.guard';
 
 
 
@@ -11,6 +12,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'registro', component: RegistroComponent },
   { path: 'resete', component: ReseteComponent },
-  { path: 'dashboard', component: DashboardComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard], },
   { path: '**', redirectTo: '/login' }
 ];
