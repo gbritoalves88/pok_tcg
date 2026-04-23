@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Header
 from app.schemas import UserCreate, UserLogin, Token, UserResponse, UserUpdateActive, UserUpdatePassword
 from app.services import auth_service
+from app.models import get_user_by_email
 
 router = APIRouter(prefix="/auth", tags=["autenticação"])
 
@@ -23,3 +24,34 @@ async def atualizar_senha(user: UserUpdatePassword):
 @router.get("/buscar-usuario")
 async def buscar_usuario(bearer: str = Header(...)):
     return auth_service.buscarUsuario(bearer)
+
+@router.get("/validar-token")
+async def validar_token(bearer: str = Header(...)):
+    """Valida se o token é válido"""
+    from app.services.auth_service import AuthService
+    
+    try:
+        auth = AuthService()
+        email = auth.normalizarBearer(bearer)
+        
+        # Busca o usuário
+
+        user = get_user_by_email(email)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuário não encontrado"
+            )
+        
+        return {
+            "valido": True,
+            "email": email,
+            "nome": user.get("nome")
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado"
+        )

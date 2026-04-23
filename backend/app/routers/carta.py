@@ -34,22 +34,6 @@ async def remover_carta(
     carta_id: str,
     bearer: str = Header(...)
 ):
-    """Remove uma carta da coleção do usuário"""
-    from app.models.carta import remover_carta_usuario
-    from app.services.auth_service import AuthService
-    from app.models import get_user_by_email
-    
-    auth = AuthService()
-    email_usuario = auth.normalizarBearer(bearer)
-    user = get_user_by_email(email_usuario)
-    
-    if not user:
-        raise HTTPException(401, "Usuário não encontrado")
-    
-    usuario_id = str(user["_id"])
-    result = remover_carta_usuario(usuario_id, carta_id)
-    
-    if result.deleted_count == 0:
-        raise HTTPException(404, "Carta não encontrada na coleção")
-    
-    return {"mensagem": "Carta removida com sucesso"}
+    """Remove uma carta ou decrementa quantidade da coleção"""
+    service = CartaService()
+    return service.remover_carta(carta_id=carta_id, bearer=bearer)

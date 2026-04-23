@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
 import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/carta.model';
+import { AuthService } from '../../services/auth.service';
 
 
 
 interface Carta {
   id?: string;
+  carta_id: string,
   nome: string;
   colecao: string;
   numero: string;
@@ -26,6 +28,7 @@ interface Carta {
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('cameraInput') cameraInput!: ElementRef<HTMLInputElement>;
 
@@ -48,10 +51,17 @@ export class DashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private cartaService: CartaService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+
+    if (!this.authService.isAutenticado()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     const usuarioSalvo = localStorage.getItem('usuario');
     if (usuarioSalvo) {
       const usuario = JSON.parse(usuarioSalvo);
@@ -197,6 +207,71 @@ export class DashboardComponent implements OnInit {
 
   }
 
+  incrementarQuantidade(card: Carta) {
+  // Usa o mesmo método de adicionar carta (backend já soma a quantidade)
+  this.cartaService.adicionarCartaColecao(
+    card.carta_id || card.carta_id || '',  // ID da carta
+    card.condicao || 'media',        // Condição existente
+    `Adicionada +1 via dashboard`,   // Observação
+    1                                 // Quantidade a adicionar (soma +1)
+  ).subscribe({
+    next: (response: any) => {
+      console.log('Carta adicionada/incrementada:', response);
+
+      // Atualiza a quantidade localmente
+      const novaQuantidade = (card.quantidade || 1) + 1;
+      card.quantidade = novaQuantidade;
+
+      // Mostra mensagem de sucesso
+      this.mostrarMensagemTemporaria(`✅ ${card.nome} agora tem ${novaQuantidade} cópias!`);
+
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao adicionar carta:', err);
+      this.mensagemErro = err.error?.detail || 'Erro ao adicionar mais uma cópia.';
+      this.modalErro = true;
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+decrementarQuantidade(card: Carta) {
+
+  if (confirm(`Deseja remover ${card.nome} da sua coleção?`)) {
+
+    this.cartaService.removerCarta(card.carta_id || card.id || '').subscribe({
+      next: () => {
+        console.log('Carta removida:', card);
+
+        // Remove da lista local
+        this.cards = this.cards.filter(c => c.id !== card.id);
+
+        this.mostrarMensagemTemporaria(`🗑️ ${card.nome} removida da coleção!`);
+        this.loadCards();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao remover carta:', err);
+        this.mensagemErro = err.error?.detail || 'Erro ao remover carta.';
+        this.modalErro = true;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+}
+
+mostrarMensagemTemporaria(mensagem: string) {
+  this.mensagemSucesso = mensagem;
+  this.cdr.detectChanges();
+
+  setTimeout(() => {
+    this.mensagemSucesso = '';
+    this.cdr.detectChanges();
+  }, 2000);
+}
+
   cartaNaoIdentificada() {
     this.mensagemErro = 'Obrigado pelo feedback! Vamos melhorar nosso sistema, tente incluir outra foto!';
     this.fecharModalSucesso();
@@ -261,7 +336,7 @@ export class DashboardComponent implements OnInit {
       }
 
       this.cards = cartas.map((carta: any) => ({
-        id: carta.id,
+        carta_id: carta.carta_id,
         nome: carta.nome || 'Carta sem nome',
         colecao: carta.set_nome || 'Coleção desconhecida',
         numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
