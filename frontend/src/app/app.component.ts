@@ -1,4 +1,4 @@
-// app/app.component.ts
+// app/app.component.ts - versão simplificada
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
@@ -17,20 +17,10 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Verifica se o token é válido ao iniciar
+    // Apenas verifica se o token existe, não valida no backend
     if (this.authService.isAutenticado()) {
-      // Token existe, verifica se é válido no backend
-      this.authService.validarTokenNoBackend().subscribe({
-        next: () => {
-          // Token válido, mantém na dashboard
-          console.log('Token válido');
-        },
-        error: () => {
-          // Token inválido, faz logout
-          console.log('Token inválido');
-          this.authService.logout();
-        }
-      });
+      // Token existe, mantém na dashboard
+      console.log('Usuário autenticado');
     }
   }
 }
