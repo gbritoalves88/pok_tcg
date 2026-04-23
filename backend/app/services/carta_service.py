@@ -5,7 +5,8 @@ from app.models.carta import (
     buscar_cartas_usuario,
     buscar_carta_catalogo_por_id,
     atualizar_quantidade_carta_usuario,
-    buscar_carta_usuario_por_id_carta  
+    buscar_carta_usuario_por_id_carta,
+    remover_carta_usuario  # ← ADICIONE ESTA LINHA
 )
 from app.services.auth_service import AuthService
 from app.models import get_user_by_email
@@ -37,7 +38,7 @@ class CartaService:
                 detail=f"Carta com ID '{carta_id}' não encontrada no catálogo"
             )
         
-        # 3. VERIFICA SE O USUÁRIO JÁ TEM ESTA CARTA
+        # 3. Verifica se o usuário já tem esta carta
         carta_existente = buscar_carta_usuario_por_id_carta(usuario_id, carta_id)
         
         if carta_existente:
@@ -78,7 +79,6 @@ class CartaService:
     def listar_minhas_cartas(self, bearer: str = None):
         """Lista todas as cartas do usuário com dados do catálogo"""
         
-        # 1. Valida token
         auth = AuthService()
         email_usuario = auth.normalizarBearer(bearer)
         user = get_user_by_email(email_usuario)
@@ -91,10 +91,10 @@ class CartaService:
         
         usuario_id = str(user["_id"])
         
-        # 2. Busca cartas do usuário
+        # Busca cartas do usuário
         cartas_usuario = buscar_cartas_usuario(usuario_id)
         
-        # 3. Enriquece com dados do catálogo (LEFT JOIN mental)
+        # Enriquece com dados do catálogo
         resultado = []
         for carta in cartas_usuario:
             carta_catalogo = buscar_carta_catalogo_por_id(carta["carta_id"])
@@ -113,17 +113,74 @@ class CartaService:
                     "quantidade": carta.get("quantidade", 1),
                     "data_adicao": carta.get("data_adicao")
                 })
-            else:
-                # Caso a carta não exista mais no catálogo
-                resultado.append({
-                    "id": str(carta["_id"]),
-                    "carta_id": carta["carta_id"],
-                    "nome": "Carta não encontrada",
-                    "imagem_url": None,
-                    "condicao": carta.get("condicao"),
-                    "observacao": carta.get("observacao"),
-                    "quantidade": carta.get("quantidade", 1),
-                    "data_adicao": carta.get("data_adicao")
-                })
         
         return resultado
+    
+    def remover_carta(self, carta_id: str, bearer: str = None):
+        """Remove uma carta ou decrementa quantidade da coleção"""
+        
+        # 1. Valida o token e obtém o usuário
+        auth = AuthService()
+        email_usuario = auth.normalizarBearer(bearer)
+        user = get_user_by_email(email_usuario)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuário não encontrado"
+            )
+        
+        usuario_id = str(user["_id"])
+        
+        # 2. Busca a carta do usuário
+        carta_existente = buscar_carta_usuario_por_id_carta(usuario_id, carta_id)
+        
+        if not carta_existente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Carta não encontrada na coleção"
+            )
+        
+        # 3. Obtém a quantidade atual
+        quantidade_atual = carta_existente.get("quantidade", 1)
+        
+        # 4. Se for a última carta (quantidade = 1), remove completamente
+        if quantidade_atual <= 1:
+            result = remover_carta_usuario(usuario_id, carta_id)
+            
+            if result.deleted_count == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Erro ao remover carta"
+                )
+            
+            return {
+                "mensagem": "Carta removida completamente da coleção",
+                "carta_id": carta_id,
+                "acao": "removida",
+                "quantidade_anterior": quantidade_atual,
+                "quantidade_nova": 0
+            }
+        
+        # 5. Se tem mais de uma, apenas decrementa a quantidade
+        nova_quantidade = quantidade_atual - 1
+        
+        resultado = atualizar_quantidade_carta_usuario(
+            usuario_id, 
+            carta_id, 
+            nova_quantidade
+        )
+        
+        if resultado.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao atualizar quantidade"
+            )
+        
+        return {
+            "mensagem": f"Quantidade decrementada para {nova_quantidade} cópia(s)",
+            "carta_id": carta_id,
+            "acao": "decrementada",
+            "quantidade_anterior": quantidade_atual,
+            "quantidade_nova": nova_quantidade
+        }
