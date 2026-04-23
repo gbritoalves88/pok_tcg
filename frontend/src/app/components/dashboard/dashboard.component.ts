@@ -8,6 +8,7 @@ import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/ca
 
 interface Carta {
   id?: string;
+  carta_id: string,
   nome: string;
   colecao: string;
   numero: string;
@@ -197,6 +198,45 @@ export class DashboardComponent implements OnInit {
 
   }
 
+  incrementarQuantidade(card: Carta) {
+  // Usa o mesmo método de adicionar carta (backend já soma a quantidade)
+  this.cartaService.adicionarCartaColecao(
+    card.carta_id || card.carta_id || '',  // ID da carta
+    card.condicao || 'media',        // Condição existente
+    `Adicionada +1 via dashboard`,   // Observação
+    1                                 // Quantidade a adicionar (soma +1)
+  ).subscribe({
+    next: (response: any) => {
+      console.log('Carta adicionada/incrementada:', response);
+
+      // Atualiza a quantidade localmente
+      const novaQuantidade = (card.quantidade || 1) + 1;
+      card.quantidade = novaQuantidade;
+
+      // Mostra mensagem de sucesso
+      this.mostrarMensagemTemporaria(`✅ ${card.nome} agora tem ${novaQuantidade} cópias!`);
+
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao adicionar carta:', err);
+      this.mensagemErro = err.error?.detail || 'Erro ao adicionar mais uma cópia.';
+      this.modalErro = true;
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+mostrarMensagemTemporaria(mensagem: string) {
+  this.mensagemSucesso = mensagem;
+  this.cdr.detectChanges();
+
+  setTimeout(() => {
+    this.mensagemSucesso = '';
+    this.cdr.detectChanges();
+  }, 2000);
+}
+
   cartaNaoIdentificada() {
     this.mensagemErro = 'Obrigado pelo feedback! Vamos melhorar nosso sistema, tente incluir outra foto!';
     this.fecharModalSucesso();
@@ -261,7 +301,7 @@ export class DashboardComponent implements OnInit {
       }
 
       this.cards = cartas.map((carta: any) => ({
-        id: carta.id,
+        carta_id: carta.carta_id,
         nome: carta.nome || 'Carta sem nome',
         colecao: carta.set_nome || 'Coleção desconhecida',
         numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
