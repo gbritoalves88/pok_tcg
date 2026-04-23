@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
 import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/carta.model';
+import { AuthService } from '../../services/auth.service';
 
 
 
@@ -50,10 +51,17 @@ export class DashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private cartaService: CartaService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+
+    if (!this.authService.isAutenticado()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     const usuarioSalvo = localStorage.getItem('usuario');
     if (usuarioSalvo) {
       const usuario = JSON.parse(usuarioSalvo);
