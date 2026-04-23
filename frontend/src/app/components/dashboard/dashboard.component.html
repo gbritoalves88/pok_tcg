@@ -52,7 +52,7 @@
           <button class="btn-recognize" (click)="recognizeCards()" [disabled]="isLoading">
             {{ isLoading ? 'Reconhecendo...' : '🔍 Reconhecer Cartas' }}
           </button>
-          <button (click)="limparPreview()" class="btn btn-secondary" [disabled]="!previewUrl">
+          <button (click)="limparPreview()" class="btn-secondary" [disabled]="!previewUrl">
             🗑️ Limpar
           </button>
         </div>
@@ -73,16 +73,22 @@
             <img *ngIf="card.imagem_url" [src]="card.imagem_url" [alt]="card.nome" class="card-img">
             <div *ngIf="!card.imagem_url" class="card-placeholder">🎴</div>
 
-          <button class="btn-increment" (click)="incrementarQuantidade(card); $event.stopPropagation()" title="Adicionar mais uma">
-            <span class="plus-icon">+</span>
-          </button>
+            <!-- Botão + (adicionar) -->
+            <button class="btn-increment btn-plus" (click)="incrementarQuantidade(card); $event.stopPropagation()" title="Adicionar mais uma">
+              <span class="plus-icon">+</span>
+            </button>
+
+            <!-- Botão - (remover) -->
+            <button class="btn-increment btn-minus" (click)="decrementarQuantidade(card); $event.stopPropagation()" title="Remover uma cópia">
+              <span class="minus-icon">-</span>
+            </button>
           </div>
 
           <div class="card-info">
             <h3>{{ card.nome }}</h3>
             <p>Coleção: {{ card.colecao }}</p>
             <p>Nº: {{ card.numero }}</p>
-            <p *ngIf="card.quantidade && card.quantidade > 1">Quantidade: {{ card.quantidade }}</p>
+            <p *ngIf="card.quantidade && card.quantidade > 1">📦 {{ card.quantidade }}x</p>
             <span class="badge" [class]="card.condicao">{{ card.raridade }}</span>
           </div>
         </div>
@@ -97,6 +103,12 @@
 
   </main>
 </div>
+
+<!-- Mensagem flutuante -->
+<div *ngIf="mensagemSucesso" class="mensagem-flutuante">
+  {{ mensagemSucesso }}
+</div>
+
 
 <!-- MODAL DE SUCESSO -->
 <div class="modal-overlay" *ngIf="modalSucesso">
@@ -124,9 +136,8 @@
 <div class="modal-overlay" *ngIf="modalErro">
   <div class="modal-content error">
     <div class="modal-icon">❌</div>
-    <div class="modal-title">Erro ao adicionar carta</div>
+    <div class="modal-title">Erro</div>
     <div class="modal-message">{{ mensagemErro }}</div>
     <button class="modal-button" (click)="fecharModalErro()">Tentar novamente</button>
   </div>
 </div>
-

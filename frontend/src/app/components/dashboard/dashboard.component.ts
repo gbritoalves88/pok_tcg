@@ -27,6 +27,7 @@ interface Carta {
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('cameraInput') cameraInput!: ElementRef<HTMLInputElement>;
 
@@ -225,6 +226,32 @@ export class DashboardComponent implements OnInit {
       this.cdr.detectChanges();
     }
   });
+}
+
+decrementarQuantidade(card: Carta) {
+
+  if (confirm(`Deseja remover ${card.nome} da sua coleção?`)) {
+
+    this.cartaService.removerCarta(card.carta_id || card.id || '').subscribe({
+      next: () => {
+        console.log('Carta removida:', card);
+
+        // Remove da lista local
+        this.cards = this.cards.filter(c => c.id !== card.id);
+
+        this.mostrarMensagemTemporaria(`🗑️ ${card.nome} removida da coleção!`);
+        this.loadCards();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao remover carta:', err);
+        this.mensagemErro = err.error?.detail || 'Erro ao remover carta.';
+        this.modalErro = true;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
 }
 
 mostrarMensagemTemporaria(mensagem: string) {

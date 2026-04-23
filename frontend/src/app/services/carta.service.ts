@@ -1,7 +1,7 @@
 // carta.service.ts
 import { HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { catchError, map, throwError, TimeoutError } from "rxjs";
+import { catchError, map, Observable, throwError, TimeoutError } from "rxjs";
 import { Router } from "@angular/router";
 import { ReconhecerRequest, ReconhecerResponse } from "../models/carta.model";
 import { ApiService } from "../services/api.service";
@@ -10,6 +10,8 @@ import { ApiService } from "../services/api.service";
     providedIn: 'root'
 })
 export class CartaService {
+
+
     constructor(
         private apiService: ApiService,
         private router: Router
@@ -57,6 +59,12 @@ export class CartaService {
             map(response => response),
             catchError(this.handleError)
         );
+    }
+
+
+
+    removerCarta(cartaId: string): Observable<any> {
+      return this.apiService.delete(`carta/remover/${cartaId}`);
     }
 
     private handleError(error: HttpErrorResponse | TimeoutError) {
