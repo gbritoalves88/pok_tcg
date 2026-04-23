@@ -72,7 +72,12 @@
           <div class="card-image">
             <img *ngIf="card.imagem_url" [src]="card.imagem_url" [alt]="card.nome" class="card-img">
             <div *ngIf="!card.imagem_url" class="card-placeholder">🎴</div>
+
+          <button class="btn-increment" (click)="incrementarQuantidade(card); $event.stopPropagation()" title="Adicionar mais uma">
+            <span class="plus-icon">+</span>
+          </button>
           </div>
+
           <div class="card-info">
             <h3>{{ card.nome }}</h3>
             <p>Coleção: {{ card.colecao }}</p>
@@ -119,7 +124,7 @@
 <div class="modal-overlay" *ngIf="modalErro">
   <div class="modal-content error">
     <div class="modal-icon">❌</div>
-    <div class="modal-title">Carta não reconhecida</div>
+    <div class="modal-title">Erro ao adicionar carta</div>
     <div class="modal-message">{{ mensagemErro }}</div>
     <button class="modal-button" (click)="fecharModalErro()">Tentar novamente</button>
   </div>
