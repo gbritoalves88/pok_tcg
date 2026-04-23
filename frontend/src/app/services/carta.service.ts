@@ -35,15 +35,15 @@ export class CartaService {
      * @param condicao - condição da carta (opcional)
      * @param observacao - observação (opcional)
      */
-    adicionarCartaColecao(cartaId: string, imagemOriginalBase64: string, condicao?: string, observacao?: string) {
+    adicionarCartaColecao(cartaId?: string,condicao?: string, observacao?: string, quantidade?: number) {
         const body = {
             carta_id: cartaId,
-            imagem_original_base64: imagemOriginalBase64,
             condicao: condicao || '',
-            observacao: observacao || ''
+            observacao: observacao || '',
+            quantidade: quantidade,
         };
 
-        return this.apiService.post('/usuarios/cartas', body).pipe(
+        return this.apiService.post('carta/adicionar', body).pipe(
             map(response => response),
             catchError(this.handleError)
         );
@@ -53,7 +53,7 @@ export class CartaService {
      * Busca todas as cartas do usuário logado
      */
     buscarMinhasCartas() {
-        return this.apiService.get('/usuarios/cartas').pipe(
+        return this.apiService.get('carta/minhas-cartas').pipe(
             map(response => response),
             catchError(this.handleError)
         );
