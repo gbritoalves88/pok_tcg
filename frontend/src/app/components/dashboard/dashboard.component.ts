@@ -4,18 +4,19 @@ import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
 import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/carta.model';
 import { AuthService } from '../../services/auth.service';
-import { timer } from 'rxjs';
+
+
 
 interface Carta {
   id?: string;
-  carta_id?: string;
+  carta_id: string,
   nome: string;
   colecao: string;
   numero: string;
   raridade: string;
   imagem_url?: string;
   condicao?: string;
-  quantidade: number;
+  quantidade?: number;
   data_adicao?: string;
 }
 
@@ -27,10 +28,9 @@ interface Carta {
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('cameraInput') cameraInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('cropImage') cropImage!: ElementRef<HTMLImageElement>;
-  @ViewChild('edgeCanvas') edgeCanvas!: ElementRef<HTMLCanvasElement>;
 
   userName: string = '';
   previewUrl: string | null = null;
@@ -46,274 +46,63 @@ export class DashboardComponent implements OnInit {
   cartaReconhecida: CartaCatalogo | null = null;
   confiancaTexto = '';
   mensagemErro = '';
-  mensagemSucesso = '';
-
-  // Camera e imagem
-  cameraFacing: string = 'environment';
-  flashAtivado = false;
-  modoCamera = false;
-  mostrarOpcoesCamera = false;
-
-  // Zoom e Crop
-  zoomLevel: number = 1;
-  modoCrop: boolean = false;
-
-  // Timer
-  timerAtivo = false;
-  timerContagem = 3;
-
-  // Detecção de bordas
-  detectarBordas = false;
-  mensagemBordas = '';
-
-  // Tempo restante
-  tempoRestante: number = 0;
-  private interval: any;
+  mensagemSucesso: string = '';
 
   constructor(
     private router: Router,
     private cartaService: CartaService,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+
+    if (!this.authService.isAutenticado()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     const usuarioSalvo = localStorage.getItem('usuario');
     if (usuarioSalvo) {
       const usuario = JSON.parse(usuarioSalvo);
       this.userName = usuario.nome;
       this.loadCards();
-      this.iniciarContadorTempo();
     } else {
       this.logout();
     }
   }
 
-  ngOnDestroy() {
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
+  logout() {
+    this.router.navigate(['/login']);
   }
 
-  // ========== CONTADOR DE TEMPO ==========
-  iniciarContadorTempo() {
-    this.interval = setInterval(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const agora = Math.floor(Date.now() / 1000);
-          this.tempoRestante = payload.exp - agora;
-
-          if (this.tempoRestante <= 0) {
-            this.authService.logout();
-          }
-        } catch (e) {}
-      }
-    }, 1000);
-  }
-
-  // ========== FEEDBACK HÁPTICO (VIBRAÇÃO) ==========
-  vibrar(duracao: number | number[]) {
-    if ('vibrate' in navigator) {
-      navigator.vibrate(duracao);
-    }
-  }
-
-  // ========== CÂMERA ==========
-  tirarFoto() {
-    this.vibrar(50);
-    this.modoCamera = true;
-    this.mostrarOpcoesCamera = true;
-    setTimeout(() => {
+  openCamera() {
+    if (this.cameraInput) {
       this.cameraInput.nativeElement.click();
-    }, 100);
-  }
-
-  switchCamera() {
-    this.vibrar(30);
-    this.cameraFacing = this.cameraFacing === 'environment' ? 'user' : 'environment';
-    this.cameraInput.nativeElement.setAttribute('capture', this.cameraFacing);
-  }
-
-  toggleFlash() {
-    this.flashAtivado = !this.flashAtivado;
-    this.vibrar(20);
-    // Nota: Flash não é suportado diretamente via HTML, é apenas indicativo visual
-  }
-
-  startTimer() {
-    this.vibrar(30);
-    this.timerAtivo = true;
-    this.timerContagem = 3;
-
-    const interval = setInterval(() => {
-      this.timerContagem--;
-      this.vibrar(10);
-      this.cdr.detectChanges();
-
-      if (this.timerContagem === 0) {
-        clearInterval(interval);
-        this.timerAtivo = false;
-        this.tirarFoto();
-      }
-    }, 1000);
-  }
-
-  fecharGuia() {
-    this.modoCamera = false;
-    this.mostrarOpcoesCamera = false;
-  }
-
-  // ========== ZOOM ==========
-  zoomIn() {
-    this.zoomLevel = Math.min(this.zoomLevel + 0.1, 3);
-    this.vibrar(10);
-  }
-
-  zoomOut() {
-    this.zoomLevel = Math.max(this.zoomLevel - 0.1, 0.5);
-    this.vibrar(10);
-  }
-
-  // ========== CROP ==========
-  iniciarCrop() {
-    this.vibrar(50);
-    this.modoCrop = true;
-  }
-
-  confirmarCrop() {
-    this.vibrar(100);
-    // Aqui você implementaria a lógica de crop real
-    // Por simplicidade, vamos apenas fechar o modal
-    this.modoCrop = false;
-    this.mensagemSucesso = '✂️ Imagem recortada!';
-    setTimeout(() => {
-      this.mensagemSucesso = '';
-    }, 2000);
-  }
-
-  cancelarCrop() {
-    this.vibrar(30);
-    this.modoCrop = false;
-  }
-
-  // ========== AJUSTE DE BRILHO ==========
-  ajustarBrilho() {
-    this.vibrar(20);
-    // Simulação de ajuste de brilho
-    this.detectarBordas = true;
-    this.analisarQualidadeImagem();
-  }
-
-  // ========== DETECÇÃO DE BORDAS E QUALIDADE ==========
-  analisarQualidadeImagem() {
-    if (!this.previewUrl) return;
-
-    const img = new Image();
-    img.onload = () => {
-      this.mensagemBordas = this.avaliarQualidade(img);
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-        this.detectarBordas = false;
-      }, 3000);
-    };
-    img.src = this.previewUrl;
-  }
-
-  avaliarQualidade(img: HTMLImageElement): string {
-    // Análise simples da imagem
-    const tamanho = this.selectedFile?.size || 0;
-    const largura = img.width;
-    const altura = img.height;
-
-    if (largura < 500 || altura < 700) {
-      return '⚠️ Imagem pequena. Aproxime a carta para melhor reconhecimento.';
     }
-    if (tamanho > 5 * 1024 * 1024) {
-      return '📦 Imagem muito grande. Vamos comprimir para melhor performance.';
-    }
-    if (largura > 2000 || altura > 2000) {
-      return '🔄 Imagem muito grande. Reduzindo para melhor processamento...';
-    }
-
-    return '✅ Boa qualidade! A carta está bem posicionada.';
   }
 
-  // ========== COMPRESSÃO DE IMAGEM ==========
-  compressImage(file: File, maxSizeMB: number = 1): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          const maxDimension = 1024;
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = (height * maxDimension) / width;
-              width = maxDimension;
-            } else {
-              width = (width * maxDimension) / height;
-              height = maxDimension;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob((blob) => {
-            const blobReader = new FileReader();
-            blobReader.readAsDataURL(blob!);
-            blobReader.onloadend = () => {
-              resolve(blobReader.result as string);
-            };
-          }, 'image/jpeg', 0.8);
-        };
-      };
-      reader.onerror = reject;
-    });
-  }
-
-  // ========== ON FILE SELECTED ==========
-  async onFileSelected(event: Event) {
-    this.vibrar(50);
+  onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       this.selectedFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.previewUrl = e.target?.result as string;
 
-      // Compressão automática
-      const compressedBase64 = await this.compressImage(this.selectedFile);
-      this.previewUrl = compressedBase64;
-
-      this.modoCamera = false;
-      this.mostrarOpcoesCamera = false;
-      this.zoomLevel = 1;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(this.selectedFile);
       this.errorMessage = '';
-
-      // Analisa qualidade
-      setTimeout(() => this.analisarQualidadeImagem(), 500);
-
-      this.cdr.detectChanges();
+      this.cdr.detectChanges(); // ✅ Força atualização imediata
     }
   }
 
+  // ✅ MÉTODO CORRIGIDO - Limpar preview
   limparPreview() {
-    this.vibrar(30);
     this.previewUrl = null;
     this.selectedFile = null;
     this.errorMessage = '';
-    this.detectarBordas = false;
-    this.zoomLevel = 1;
 
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
@@ -323,26 +112,35 @@ export class DashboardComponent implements OnInit {
       this.cameraInput.nativeElement.value = '';
     }
 
-    this.cdr.detectChanges();
+    this.cdr.detectChanges(); // ✅ Força atualização da UI
+    console.log('Preview limpo, UI atualizada');
   }
 
-  // ========== RECONHECIMENTO ==========
   recognizeCards() {
-    if (!this.selectedFile || !this.previewUrl) {
+
+    if (!this.selectedFile) {
+      console.log('Sem arquivo selecionado');
       this.errorMessage = 'Selecione uma foto primeiro!';
       this.cdr.detectChanges();
       return;
     }
 
-    this.vibrar(100);
+    if (!this.previewUrl) {
+      console.log('Sem preview');
+      this.errorMessage = 'Erro ao carregar imagem. Tente novamente.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.cartaService.reconhecerCarta(this.previewUrl).subscribe({
-      next: (response: any) => {
+    const imagemBase64 = this.previewUrl;
+
+    this.cartaService.reconhecerCarta(imagemBase64).subscribe({
+      next: (response) => {
         this.isLoading = false;
-        this.vibrar(200);
 
         if (response.encontrada && response.carta) {
           this.cartaReconhecida = response.carta;
@@ -364,11 +162,13 @@ export class DashboardComponent implements OnInit {
             imagem_url: response.carta.imagem_url
           };
 
+
           this.modalSucesso = true;
           this.cdr.detectChanges();
+
         } else {
-          this.vibrar([100, 50, 100]);
-          this.mensagemErro = response.mensagem || 'Não foi possível identificar a carta.';
+          this.mensagemErro = response.mensagem || 'Não foi possível identificar a carta. Tente outra foto.';
+          console.log('Abrindo modal de erro');
           this.modalErro = true;
           this.cdr.detectChanges();
         }
@@ -376,7 +176,6 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error('Erro na requisição:', err);
         this.isLoading = false;
-        this.vibrar([100, 50, 100]);
         this.mensagemErro = 'Erro ao reconhecer carta. Tente novamente.';
         this.modalErro = true;
         this.cdr.detectChanges();
@@ -384,122 +183,100 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ========== CARTAS ==========
   adicionarCarta() {
-    this.cartaService.adicionarCartaColecao(
-      this.cartaParaAdicionar?.carta_id,
-      this.cartaParaAdicionar?.condicao,
-      this.cartaParaAdicionar.observacao,
-      this.cartaParaAdicionar?.quantidade
-    ).subscribe({
-      next: () => {
+
+
+     this.cartaService.adicionarCartaColecao(this.cartaParaAdicionar?.carta_id, this.cartaParaAdicionar?.condicao , this.cartaParaAdicionar.observacao , this.cartaParaAdicionar?.quantidade).subscribe({
+      next: (response) => {
         this.isLoading = false;
-        this.vibrar(100);
-        this.fecharModalSucesso();
-        this.loadCards();
-        this.mensagemSucesso = '✅ Carta adicionada à coleção!';
-        setTimeout(() => { this.mensagemSucesso = ''; }, 2000);
-        this.cdr.detectChanges();
+
+          this.fecharModalSucesso();
+          this.loadCards();
+          this.cdr.detectChanges();
+
+
       },
       error: (err) => {
         console.error('Erro na requisição:', err);
         this.isLoading = false;
-        this.vibrar([100, 50, 100]);
-        this.mensagemErro = 'Erro ao adicionar carta à coleção.';
+        this.mensagemErro = 'Erro ao reconhecer carta. Tente novamente.';
         this.modalErro = true;
         this.cdr.detectChanges();
       }
     });
+
   }
 
   incrementarQuantidade(card: Carta) {
-    this.cartaService.adicionarCartaColecao(
-      card.carta_id || card.id || '',
-      card.condicao || 'media',
-      'Adicionada +1 via dashboard',
-      1
-    ).subscribe({
+  // Usa o mesmo método de adicionar carta (backend já soma a quantidade)
+  this.cartaService.adicionarCartaColecao(
+    card.carta_id || card.carta_id || '',  // ID da carta
+    card.condicao || 'media',        // Condição existente
+    `Adicionada +1 via dashboard`,   // Observação
+    1                                 // Quantidade a adicionar (soma +1)
+  ).subscribe({
+    next: (response: any) => {
+      console.log('Carta adicionada/incrementada:', response);
+
+      // Atualiza a quantidade localmente
+      const novaQuantidade = (card.quantidade || 1) + 1;
+      card.quantidade = novaQuantidade;
+
+      // Mostra mensagem de sucesso
+      this.mostrarMensagemTemporaria(`✅ ${card.nome} agora tem ${novaQuantidade} cópias!`);
+
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Erro ao adicionar carta:', err);
+      this.mensagemErro = err.error?.detail || 'Erro ao adicionar mais uma cópia.';
+      this.modalErro = true;
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+decrementarQuantidade(card: Carta) {
+
+  if (confirm(`Deseja remover ${card.nome} da sua coleção?`)) {
+
+    this.cartaService.removerCarta(card.carta_id || card.id || '').subscribe({
       next: () => {
-        this.mensagemSucesso = `✅ +1 cópia de ${card.nome}!`;
-        setTimeout(() => { this.mensagemSucesso = ''; }, 2000);
+        console.log('Carta removida:', card);
+
+        // Remove da lista local
+        this.cards = this.cards.filter(c => c.id !== card.id);
+
+        this.mostrarMensagemTemporaria(`🗑️ ${card.nome} removida da coleção!`);
         this.loadCards();
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Erro:', err);
-        this.mensagemErro = 'Erro ao adicionar mais uma cópia.';
+        console.error('Erro ao remover carta:', err);
+        this.mensagemErro = err.error?.detail || 'Erro ao remover carta.';
         this.modalErro = true;
         this.cdr.detectChanges();
       }
     });
   }
 
-  decrementarQuantidade(card: Carta) {
-    this.cartaService.removerCarta(card.carta_id || card.id || '').subscribe({
-      next: () => {
-        this.mensagemSucesso = `✅ -1 cópia de ${card.nome}!`;
-        setTimeout(() => { this.mensagemSucesso = ''; }, 2000);
-        this.loadCards();
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Erro:', err);
-        this.mensagemErro = 'Erro ao remover uma cópia.';
-        this.modalErro = true;
-        this.cdr.detectChanges();
-      }
-    });
-  }
+}
+
+mostrarMensagemTemporaria(mensagem: string) {
+  this.mensagemSucesso = mensagem;
+  this.cdr.detectChanges();
+
+  setTimeout(() => {
+    this.mensagemSucesso = '';
+    this.cdr.detectChanges();
+  }, 2000);
+}
 
   cartaNaoIdentificada() {
     this.mensagemErro = 'Obrigado pelo feedback! Vamos melhorar nosso sistema, tente incluir outra foto!';
     this.fecharModalSucesso();
     this.modalErro = true;
     this.cdr.detectChanges();
-  }
-
-  loadCards() {
-    this.isLoading = true;
-
-    this.cartaService.buscarMinhasCartas().subscribe({
-      next: (response: any) => {
-        console.log('Resposta do backend:', response);
-        const cartas = Array.isArray(response) ? response : [];
-
-        this.cards = cartas.map((carta: any) => ({
-          id: carta.id,
-          carta_id: carta.carta_id,
-          nome: carta.nome || 'Carta sem nome',
-          colecao: carta.set_nome || 'Coleção desconhecida',
-          numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
-          raridade: this.getRaridadeTexto(carta.condicao),
-          imagem_url: carta.imagem_url,
-          condicao: carta.condicao,
-          quantidade: carta.quantidade || 1,
-          data_adicao: carta.data_adicao
-        }));
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err: any) => {
-        console.error('Erro ao carregar cartas:', err);
-        this.isLoading = false;
-        this.errorMessage = 'Erro ao carregar suas cartas. Tente novamente.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  getRaridadeTexto(condicao: string): string {
-    const raridadeMap: { [key: string]: string } = {
-      'excelente': 'Lendária ⭐⭐⭐',
-      'boa': 'Rara ⭐⭐',
-      'media': 'Comum ⭐',
-      'near mint': 'Mint ⭐⭐⭐',
-      'mint': 'Mint ⭐⭐⭐'
-    };
-    return raridadeMap[condicao?.toLowerCase()] || 'Comum';
   }
 
   fecharModalSucesso() {
@@ -527,7 +304,6 @@ export class DashboardComponent implements OnInit {
     this.previewUrl = null;
     this.selectedFile = null;
     this.isLoading = false;
-    this.detectarBordas = false;
 
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
@@ -540,7 +316,59 @@ export class DashboardComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  logout() {
-    this.authService.logout();
-  }
+ loadCards() {
+  this.isLoading = true;
+
+  this.cartaService.buscarMinhasCartas().subscribe({
+    next: (response: any) => {
+      console.log('Resposta do backend:', response);
+
+      // O backend retorna diretamente um array (conforme seu exemplo)
+      // [{"id": "...", "carta_id": "...", ...}]
+      const cartas = Array.isArray(response) ? response : [];
+
+      if (cartas.length === 0) {
+        console.log('Nenhuma carta encontrada');
+        this.cards = [];
+        this.isLoading = false;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.cards = cartas.map((carta: any) => ({
+        carta_id: carta.carta_id,
+        nome: carta.nome || 'Carta sem nome',
+        colecao: carta.set_nome || 'Coleção desconhecida',
+        numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
+        raridade: this.getRaridadeTexto(carta.condicao),
+        imagem_url: carta.imagem_url,
+        condicao: carta.condicao,
+        quantidade: carta.quantidade || 1,
+        data_adicao: carta.data_adicao
+      }));
+
+      console.log('Cartas processadas:', this.cards);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    },
+    error: (err: any) => {
+      console.error('Erro ao carregar cartas:', err);
+      this.isLoading = false;
+      this.errorMessage = err.message || 'Erro ao carregar suas cartas. Tente novamente.';
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+  getRaridadeTexto(condicao: string): string {
+  const raridadeMap: { [key: string]: string } = {
+    'excelente': 'Lendária ⭐⭐⭐',
+    'boa': 'Rara ⭐⭐',
+    'media': 'Comum ⭐',
+    'near mint': 'Mint ⭐⭐⭐',
+    'mint': 'Mint ⭐⭐⭐'
+  };
+  return raridadeMap[condicao?.toLowerCase()] || 'Comum';
+}
+
 }
