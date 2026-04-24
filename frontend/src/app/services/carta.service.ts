@@ -75,4 +75,8 @@ export class CartaService {
         console.error(`Erro na API: ${error.message}`);
         return throwError(() => new Error('Erro na comunicação com a API'));
     }
+
+    buscarCatalogo(): Observable<any> {
+      return this.apiService.get('carta/catalogo');
+    }
 }

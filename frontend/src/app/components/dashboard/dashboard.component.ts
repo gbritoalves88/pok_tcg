@@ -1,15 +1,16 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
 import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/carta.model';
 import { AuthService } from '../../services/auth.service';
-
+import { BottomNavComponent } from "../bottom-nav/bottom-nav.component";
 
 
 interface Carta {
   id?: string;
-  carta_id: string,
+  carta_id: string;
   nome: string;
   colecao: string;
   numero: string;
@@ -23,7 +24,7 @@ interface Carta {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, BottomNavComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -38,7 +39,12 @@ export class DashboardComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   cards: Carta[] = [];
+  cardsOriginal: Carta[] = []; // Lista original para filtro
   cartaParaAdicionar: Partial<CartaUsuario> = {};
+
+  // Filtro
+  termoBusca: string = '';
+  cartasFiltradas: Carta[] = [];
 
   // Modal
   modalSucesso = false;
@@ -56,7 +62,6 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-
     if (!this.authService.isAutenticado()) {
       this.router.navigate(['/login']);
       return;
@@ -89,16 +94,14 @@ export class DashboardComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.previewUrl = e.target?.result as string;
-
         this.cdr.detectChanges();
       };
       reader.readAsDataURL(this.selectedFile);
       this.errorMessage = '';
-      this.cdr.detectChanges(); // ✅ Força atualização imediata
+      this.cdr.detectChanges();
     }
   }
 
-  // ✅ MÉTODO CORRIGIDO - Limpar preview
   limparPreview() {
     this.previewUrl = null;
     this.selectedFile = null;
@@ -112,12 +115,35 @@ export class DashboardComponent implements OnInit {
       this.cameraInput.nativeElement.value = '';
     }
 
-    this.cdr.detectChanges(); // ✅ Força atualização da UI
+    this.cdr.detectChanges();
     console.log('Preview limpo, UI atualizada');
   }
 
-  recognizeCards() {
+  // ========== FILTRO DE BUSCA ==========
+  filtrarCartas() {
+    if (!this.termoBusca || this.termoBusca.trim() === '') {
+      this.cartasFiltradas = [...this.cardsOriginal];
+      return;
+    }
 
+    const termo = this.termoBusca.toLowerCase().trim();
+
+    this.cartasFiltradas = this.cardsOriginal.filter(carta => {
+      return (
+        carta.nome.toLowerCase().includes(termo) ||
+        carta.colecao.toLowerCase().includes(termo) ||
+        carta.numero.toLowerCase().includes(termo) ||
+        (carta.carta_id && carta.carta_id.toLowerCase().includes(termo))
+      );
+    });
+  }
+
+  limparFiltro() {
+    this.termoBusca = '';
+    this.cartasFiltradas = [...this.cardsOriginal];
+  }
+
+  recognizeCards() {
     if (!this.selectedFile) {
       console.log('Sem arquivo selecionado');
       this.errorMessage = 'Selecione uma foto primeiro!';
@@ -162,7 +188,6 @@ export class DashboardComponent implements OnInit {
             imagem_url: response.carta.imagem_url
           };
 
-
           this.modalSucesso = true;
           this.cdr.detectChanges();
 
@@ -184,17 +209,17 @@ export class DashboardComponent implements OnInit {
   }
 
   adicionarCarta() {
-
-
-     this.cartaService.adicionarCartaColecao(this.cartaParaAdicionar?.carta_id, this.cartaParaAdicionar?.condicao , this.cartaParaAdicionar.observacao , this.cartaParaAdicionar?.quantidade).subscribe({
+    this.cartaService.adicionarCartaColecao(
+      this.cartaParaAdicionar?.carta_id,
+      this.cartaParaAdicionar?.condicao,
+      this.cartaParaAdicionar.observacao,
+      this.cartaParaAdicionar?.quantidade
+    ).subscribe({
       next: (response) => {
         this.isLoading = false;
-
-          this.fecharModalSucesso();
-          this.loadCards();
-          this.cdr.detectChanges();
-
-
+        this.fecharModalSucesso();
+        this.loadCards();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erro na requisição:', err);
@@ -204,73 +229,60 @@ export class DashboardComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
-
   }
 
   incrementarQuantidade(card: Carta) {
-  // Usa o mesmo método de adicionar carta (backend já soma a quantidade)
-  this.cartaService.adicionarCartaColecao(
-    card.carta_id || card.carta_id || '',  // ID da carta
-    card.condicao || 'media',        // Condição existente
-    `Adicionada +1 via dashboard`,   // Observação
-    1                                 // Quantidade a adicionar (soma +1)
-  ).subscribe({
-    next: (response: any) => {
-      console.log('Carta adicionada/incrementada:', response);
-
-      // Atualiza a quantidade localmente
-      const novaQuantidade = (card.quantidade || 1) + 1;
-      card.quantidade = novaQuantidade;
-
-      // Mostra mensagem de sucesso
-      this.mostrarMensagemTemporaria(`✅ ${card.nome} agora tem ${novaQuantidade} cópias!`);
-
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Erro ao adicionar carta:', err);
-      this.mensagemErro = err.error?.detail || 'Erro ao adicionar mais uma cópia.';
-      this.modalErro = true;
-      this.cdr.detectChanges();
-    }
-  });
-}
-
-decrementarQuantidade(card: Carta) {
-
-  if (confirm(`Deseja remover ${card.nome} da sua coleção?`)) {
-
-    this.cartaService.removerCarta(card.carta_id || card.id || '').subscribe({
-      next: () => {
-        console.log('Carta removida:', card);
-
-        // Remove da lista local
-        this.cards = this.cards.filter(c => c.id !== card.id);
-
-        this.mostrarMensagemTemporaria(`🗑️ ${card.nome} removida da coleção!`);
-        this.loadCards();
+    this.cartaService.adicionarCartaColecao(
+      card.carta_id || card.carta_id || '',
+      card.condicao || 'media',
+      `Adicionada +1 via dashboard`,
+      1
+    ).subscribe({
+      next: (response: any) => {
+        console.log('Carta adicionada/incrementada:', response);
+        const novaQuantidade = (card.quantidade || 1) + 1;
+        card.quantidade = novaQuantidade;
+        this.mostrarMensagemTemporaria(`✅ ${card.nome} agora tem ${novaQuantidade} cópias!`);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Erro ao remover carta:', err);
-        this.mensagemErro = err.error?.detail || 'Erro ao remover carta.';
+        console.error('Erro ao adicionar carta:', err);
+        this.mensagemErro = err.error?.detail || 'Erro ao adicionar mais uma cópia.';
         this.modalErro = true;
         this.cdr.detectChanges();
       }
     });
   }
 
-}
+  decrementarQuantidade(card: Carta) {
+    if (confirm(`Deseja remover ${card.nome} da sua coleção?`)) {
+      this.cartaService.removerCarta(card.carta_id || card.id || '').subscribe({
+        next: () => {
+          console.log('Carta removida:', card);
+          this.cards = this.cards.filter(c => c.id !== card.id);
+          this.mostrarMensagemTemporaria(`🗑️ ${card.nome} removida da coleção!`);
+          this.loadCards();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Erro ao remover carta:', err);
+          this.mensagemErro = err.error?.detail || 'Erro ao remover carta.';
+          this.modalErro = true;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
 
-mostrarMensagemTemporaria(mensagem: string) {
-  this.mensagemSucesso = mensagem;
-  this.cdr.detectChanges();
-
-  setTimeout(() => {
-    this.mensagemSucesso = '';
+  mostrarMensagemTemporaria(mensagem: string) {
+    this.mensagemSucesso = mensagem;
     this.cdr.detectChanges();
-  }, 2000);
-}
+
+    setTimeout(() => {
+      this.mensagemSucesso = '';
+      this.cdr.detectChanges();
+    }, 2000);
+  }
 
   cartaNaoIdentificada() {
     this.mensagemErro = 'Obrigado pelo feedback! Vamos melhorar nosso sistema, tente incluir outra foto!';
@@ -316,59 +328,62 @@ mostrarMensagemTemporaria(mensagem: string) {
     this.cdr.detectChanges();
   }
 
- loadCards() {
-  this.isLoading = true;
+  loadCards() {
+    this.isLoading = true;
 
-  this.cartaService.buscarMinhasCartas().subscribe({
-    next: (response: any) => {
-      console.log('Resposta do backend:', response);
+    this.cartaService.buscarMinhasCartas().subscribe({
+      next: (response: any) => {
+        console.log('Resposta do backend:', response);
 
-      // O backend retorna diretamente um array (conforme seu exemplo)
-      // [{"id": "...", "carta_id": "...", ...}]
-      const cartas = Array.isArray(response) ? response : [];
+        const cartas = Array.isArray(response) ? response : [];
 
-      if (cartas.length === 0) {
-        console.log('Nenhuma carta encontrada');
-        this.cards = [];
+        if (cartas.length === 0) {
+          console.log('Nenhuma carta encontrada');
+          this.cards = [];
+          this.cardsOriginal = [];
+          this.cartasFiltradas = [];
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          return;
+        }
+
+        this.cardsOriginal = cartas.map((carta: any) => ({
+          carta_id: carta.carta_id,
+          nome: carta.nome || 'Carta sem nome',
+          colecao: carta.set_nome || 'Coleção desconhecida',
+          numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
+          raridade: this.getRaridadeTexto(carta.condicao),
+          imagem_url: carta.imagem_url,
+          condicao: carta.condicao,
+          quantidade: carta.quantidade || 1,
+          data_adicao: carta.data_adicao
+        }));
+
+        // Inicializa as listas filtradas
+        this.cards = [...this.cardsOriginal];
+        this.cartasFiltradas = [...this.cardsOriginal];
+
+        console.log('Cartas processadas:', this.cards);
         this.isLoading = false;
         this.cdr.detectChanges();
-        return;
+      },
+      error: (err: any) => {
+        console.error('Erro ao carregar cartas:', err);
+        this.isLoading = false;
+        this.errorMessage = err.message || 'Erro ao carregar suas cartas. Tente novamente.';
+        this.cdr.detectChanges();
       }
-
-      this.cards = cartas.map((carta: any) => ({
-        carta_id: carta.carta_id,
-        nome: carta.nome || 'Carta sem nome',
-        colecao: carta.set_nome || 'Coleção desconhecida',
-        numero: carta.carta_id ? carta.carta_id.split('-')[1] : '---',
-        raridade: this.getRaridadeTexto(carta.condicao),
-        imagem_url: carta.imagem_url,
-        condicao: carta.condicao,
-        quantidade: carta.quantidade || 1,
-        data_adicao: carta.data_adicao
-      }));
-
-      console.log('Cartas processadas:', this.cards);
-      this.isLoading = false;
-      this.cdr.detectChanges();
-    },
-    error: (err: any) => {
-      console.error('Erro ao carregar cartas:', err);
-      this.isLoading = false;
-      this.errorMessage = err.message || 'Erro ao carregar suas cartas. Tente novamente.';
-      this.cdr.detectChanges();
-    }
-  });
-}
+    });
+  }
 
   getRaridadeTexto(condicao: string): string {
-  const raridadeMap: { [key: string]: string } = {
-    'excelente': 'Lendária ⭐⭐⭐',
-    'boa': 'Rara ⭐⭐',
-    'media': 'Comum ⭐',
-    'near mint': 'Mint ⭐⭐⭐',
-    'mint': 'Mint ⭐⭐⭐'
-  };
-  return raridadeMap[condicao?.toLowerCase()] || 'Comum';
-}
-
+    const raridadeMap: { [key: string]: string } = {
+      'excelente': 'Lendária ⭐⭐⭐',
+      'boa': 'Rara ⭐⭐',
+      'media': 'Comum ⭐',
+      'near mint': 'Mint ⭐⭐⭐',
+      'mint': 'Mint ⭐⭐⭐'
+    };
+    return raridadeMap[condicao?.toLowerCase()] || 'Comum';
+  }
 }

@@ -6,7 +6,8 @@ from app.models.carta import (
     buscar_carta_catalogo_por_id,
     atualizar_quantidade_carta_usuario,
     buscar_carta_usuario_por_id_carta,
-    remover_carta_usuario  # ← ADICIONE ESTA LINHA
+    remover_carta_usuario,
+    buscar_todas_cartas_catalogo
 )
 from app.services.auth_service import AuthService
 from app.models import get_user_by_email
@@ -184,3 +185,27 @@ class CartaService:
             "quantidade_anterior": quantidade_atual,
             "quantidade_nova": nova_quantidade
         }
+
+    def buscar_catalogo(self, bearer: str = None):
+        """Busca todas as cartas do catálogo (requer autenticação)"""
+        
+        # 1. Valida o token e obtém o usuário
+        auth = AuthService()
+        email_usuario = auth.normalizarBearer(bearer)
+        user = get_user_by_email(email_usuario)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuário não encontrado"
+            )
+        
+        # 2. Busca todas as cartas do catálogo
+        cartas = buscar_todas_cartas_catalogo()
+        
+        # 3. Converte ObjectId para string
+        for carta in cartas:
+            if "_id" in carta:
+                carta["_id"] = str(carta["_id"])
+        
+        return cartas
