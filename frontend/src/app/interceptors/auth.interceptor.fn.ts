@@ -19,10 +19,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         localStorage.removeItem('usuario');
         router.navigate(['/login']);
 
-        // Mostra mensagem amigável (opcional)
-        alert('⏰ Sua sessão expirou! Faça login novamente.');
+        if (!router.url.includes('/login')) {
 
-        // Cancela a requisição
+          console.log('⏰ Sessão expirada. Redirecionando para login...');
+          router.navigate(['/login']);
+        }
+
+
         throw new Error('Token expirado');
       }
     } catch (error) {
