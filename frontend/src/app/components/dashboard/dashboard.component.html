@@ -64,36 +64,52 @@
       {{ errorMessage }}
     </div>
 
-    <!-- Lista de cartas reconhecidas -->
-    <div class="cards-section" *ngIf="cards.length > 0">
-      <h2>Minhas Cartas ({{ cards.length }})</h2>
-      <div class="cards-grid">
-        <div *ngFor="let card of cards" class="card-item">
-          <div class="card-image">
-            <img *ngIf="card.imagem_url" [src]="card.imagem_url" [alt]="card.nome" class="card-img">
-            <div *ngIf="!card.imagem_url" class="card-placeholder">🎴</div>
+<!-- Filtro de busca -->
+<div class="search-filter" *ngIf="cardsOriginal.length > 0">
+  <div class="search-container">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      [(ngModel)]="termoBusca"
+      (input)="filtrarCartas()"
+      placeholder="Buscar carta por nome, coleção ou número..."
+      class="search-input"
+      autocomplete="off">
+    <button *ngIf="termoBusca" (click)="limparFiltro()" class="search-clear">✕</button>
+  </div>
+  <p class="search-result-count" *ngIf="termoBusca">
+    {{ cartasFiltradas.length }} de {{ cardsOriginal.length }} carta(s) encontrada(s)
+  </p>
+</div>
 
-            <!-- Botão + (adicionar) -->
-            <button class="btn-increment btn-plus" (click)="incrementarQuantidade(card); $event.stopPropagation()" title="Adicionar mais uma">
-              <span class="plus-icon">+</span>
-            </button>
-
-            <!-- Botão - (remover) -->
-            <button class="btn-increment btn-minus" (click)="decrementarQuantidade(card); $event.stopPropagation()" title="Remover uma cópia">
-              <span class="minus-icon">-</span>
-            </button>
-          </div>
-
-          <div class="card-info">
-            <h3>{{ card.nome }}</h3>
-            <p>Coleção: {{ card.colecao }}</p>
-            <p>Nº: {{ card.numero }}</p>
-            <p *ngIf="card.quantidade && card.quantidade > 1">📦 {{ card.quantidade }}x</p>
-            <span class="badge" [class]="card.condicao">{{ card.raridade }}</span>
-          </div>
-        </div>
+<!-- Lista de cartas filtradas -->
+<div class="cards-section" *ngIf="cartasFiltradas.length > 0">
+  <h2>Minhas Cartas ({{ cartasFiltradas.length }})</h2>
+  <div class="cards-grid">
+    <div *ngFor="let card of cartasFiltradas" class="card-item">
+      <!-- conteúdo do card igual ao que você já tem -->
+      <div class="card-image">
+        <img *ngIf="card.imagem_url" [src]="card.imagem_url" [alt]="card.nome" class="card-img">
+        <div *ngIf="!card.imagem_url" class="card-placeholder">🎴</div>
+        <button class="btn-increment btn-plus" (click)="incrementarQuantidade(card); $event.stopPropagation()" title="Adicionar mais uma">
+          <span class="plus-icon">+</span>
+        </button>
+        <button class="btn-increment btn-minus" (click)="decrementarQuantidade(card); $event.stopPropagation()" title="Remover uma cópia">
+          <span class="minus-icon">-</span>
+        </button>
+      </div>
+      <div class="card-info">
+        <h3>{{ card.nome }}</h3>
+        <p>Coleção: {{ card.colecao }}</p>
+        <p>Nº: {{ card.numero }}</p>
+        <p *ngIf="card.quantidade && card.quantidade > 1">📦 {{ card.quantidade }}x</p>
+        <span class="badge" [class]="card.condicao">{{ card.raridade }}</span>
       </div>
     </div>
+  </div>
+</div>
+
+
 
     <!-- Mensagem quando não tem cartas -->
     <div *ngIf="cards.length === 0 && !isLoading" class="empty-state">
