@@ -6,6 +6,9 @@
     </div>
     <div class="user-info">
       <span class="user-name">{{ userName }}</span>
+      <span class="timer" *ngIf="tempoRestante > 0 && tempoRestante < 300">
+        ⏱️ {{ tempoRestante }}s
+      </span>
       <button class="btn-logout" (click)="logout()">Sair</button>
     </div>
   </header>
@@ -22,16 +25,16 @@
           type="file"
           #fileInput
           (change)="onFileSelected($event)"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           style="display: none">
 
-        <!-- Input para câmera (celular) -->
+        <!-- Input para câmera (celular) com suporte a troca -->
         <input
           type="file"
           #cameraInput
           (change)="onFileSelected($event)"
-          accept="image/*"
-          capture="environment"
+          accept="image/jpeg,image/png,image/webp"
+          [attr.capture]="cameraFacing"
           style="display: none">
 
         <!-- Botões de seleção -->
@@ -39,22 +42,53 @@
           <button class="btn-upload" (click)="fileInput.click()">
             📁 Selecionar da Galeria
           </button>
-          <button class="btn-camera" (click)="openCamera()">
+          <button class="btn-camera" (click)="tirarFoto()">
             📸 Tirar Foto Agora
+          </button>
+        </div>
+
+        <!-- Opções avançadas de câmera -->
+        <div class="camera-options" *ngIf="mostrarOpcoesCamera">
+          <button class="btn-camera-switch" (click)="switchCamera()">
+            🔄 Trocar Câmera
+          </button>
+          <button class="btn-flash" (click)="toggleFlash()">
+            💡 {{ flashAtivado ? 'Flash ON' : 'Flash OFF' }}
+          </button>
+          <button class="btn-timer" (click)="startTimer()">
+            ⏱️ Timer 3s
           </button>
         </div>
 
         <p class="upload-hint">Tire uma foto das suas cartas e reconheça automaticamente</p>
 
-        <!-- Preview da imagem -->
+        <!-- Preview da imagem com controles -->
         <div *ngIf="previewUrl" class="preview">
-          <img [src]="previewUrl" alt="Preview">
-          <button class="btn-recognize" (click)="recognizeCards()" [disabled]="isLoading">
-            {{ isLoading ? 'Reconhecendo...' : '🔍 Reconhecer Cartas' }}
-          </button>
-          <button (click)="limparPreview()" class="btn-secondary" [disabled]="!previewUrl">
-            🗑️ Limpar
-          </button>
+          <div class="preview-controls">
+            <button class="btn-zoom" (click)="zoomIn()" title="Aumentar">🔍+</button>
+            <button class="btn-zoom" (click)="zoomOut()" title="Diminuir">🔍-</button>
+            <button class="btn-crop" (click)="iniciarCrop()" title="Recortar">✂️ Recortar</button>
+            <button class="btn-brightness" (click)="ajustarBrilho()" title="Ajustar Brilho">💡</button>
+          </div>
+
+          <div class="image-container" [style.transform]="'scale(' + zoomLevel + ')'">
+            <img [src]="previewUrl" alt="Preview" class="preview-image">
+          </div>
+
+          <!-- Detecção de bordas (visual) -->
+          <div *ngIf="detectarBordas" class="edge-detection-overlay">
+            <canvas #edgeCanvas class="edge-canvas"></canvas>
+            <p class="edge-feedback">{{ mensagemBordas }}</p>
+          </div>
+
+          <div class="preview-actions">
+            <button class="btn-recognize" (click)="recognizeCards()" [disabled]="isLoading">
+              {{ isLoading ? 'Reconhecendo...' : '🔍 Reconhecer Cartas' }}
+            </button>
+            <button (click)="limparPreview()" class="btn-secondary" [disabled]="!previewUrl">
+              🗑️ Limpar
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -72,18 +106,13 @@
           <div class="card-image">
             <img *ngIf="card.imagem_url" [src]="card.imagem_url" [alt]="card.nome" class="card-img">
             <div *ngIf="!card.imagem_url" class="card-placeholder">🎴</div>
-
-            <!-- Botão + (adicionar) -->
             <button class="btn-increment btn-plus" (click)="incrementarQuantidade(card); $event.stopPropagation()" title="Adicionar mais uma">
               <span class="plus-icon">+</span>
             </button>
-
-            <!-- Botão - (remover) -->
             <button class="btn-increment btn-minus" (click)="decrementarQuantidade(card); $event.stopPropagation()" title="Remover uma cópia">
               <span class="minus-icon">-</span>
             </button>
           </div>
-
           <div class="card-info">
             <h3>{{ card.nome }}</h3>
             <p>Coleção: {{ card.colecao }}</p>
@@ -104,11 +133,51 @@
   </main>
 </div>
 
+<!-- Guia de Posicionamento -->
+<div class="camera-guide" *ngIf="modoCamera">
+  <div class="guide-overlay">
+    <div class="guide-frame">
+      <div class="guide-corners">
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+      </div>
+      <p class="guide-text">📷 Centralize a carta</p>
+      <p class="guide-hint">Mantenha a carta bem iluminada e sem sombras</p>
+    </div>
+  </div>
+  <button class="btn-close-guide" (click)="fecharGuia()">✕</button>
+</div>
+
+<!-- Modal de Crop -->
+<div class="image-editor" *ngIf="modoCrop">
+  <div class="editor-container">
+    <h3>✂️ Recortar Imagem</h3>
+    <div class="zoom-controls">
+      <button (click)="zoomOut()" class="zoom-btn">−</button>
+      <span>{{ (zoomLevel * 100).toFixed(0) }}%</span>
+      <button (click)="zoomIn()" class="zoom-btn">+</button>
+    </div>
+    <div class="image-container crop-container">
+      <img [src]="previewUrl" #cropImage class="crop-image">
+    </div>
+    <div class="crop-actions">
+      <button (click)="confirmarCrop()" class="btn-confirm">✅ Confirmar</button>
+      <button (click)="cancelarCrop()" class="btn-cancel">❌ Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Timer Overlay -->
+<div *ngIf="timerAtivo" class="timer-overlay">
+  <div class="timer-number">{{ timerContagem }}</div>
+</div>
+
 <!-- Mensagem flutuante -->
 <div *ngIf="mensagemSucesso" class="mensagem-flutuante">
   {{ mensagemSucesso }}
 </div>
-
 
 <!-- MODAL DE SUCESSO -->
 <div class="modal-overlay" *ngIf="modalSucesso">
