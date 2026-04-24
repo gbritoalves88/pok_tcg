@@ -1,0 +1,70 @@
+<!-- app/components/catalogo/catalogo.component.html -->
+<div class="catalogo-container">
+  <header class="header">
+    <button class="btn-back" (click)="voltar()">← Voltar</button>
+    <div class="logo">📋 Catálogo de Cartas</div>
+    <div class="placeholder"></div>
+  </header>
+
+  <main class="main-content">
+    <!-- Mensagem de sucesso -->
+    <div *ngIf="mensagemSucesso" class="mensagem-sucesso">
+      {{ mensagemSucesso }}
+    </div>
+
+    <!-- Mensagem de erro -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Filtro de busca -->
+    <div class="search-filter">
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="termoBusca"
+          (input)="filtrarCartas()"
+          placeholder="Buscar carta por nome, coleção ou ID..."
+          class="search-input"
+          autocomplete="off">
+        <button *ngIf="termoBusca" (click)="limparFiltro()" class="search-clear">✕</button>
+      </div>
+      <p class="search-result-count" *ngIf="termoBusca">
+        {{ cartasFiltradas.length }} de {{ cartasCatalogo.length }} carta(s) encontrada(s)
+      </p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading">
+      <div class="spinner"></div>
+      <p>Carregando catálogo...</p>
+    </div>
+
+    <!-- Lista de cartas -->
+    <div class="catalogo-section" *ngIf="!isLoading && cartasFiltradas.length > 0">
+      <h2>Todas as Cartas Disponíveis ({{ cartasFiltradas.length }})</h2>
+      <div class="cards-grid">
+        <div *ngFor="let carta of cartasFiltradas" class="card-item">
+          <div class="card-image">
+            <img [src]="carta.imagem_url" [alt]="carta.nome" class="card-img">
+          </div>
+          <div class="card-info">
+            <h3>{{ carta.nome }}</h3>
+            <p>Coleção: {{ carta.set_nome }}</p>
+            <p>ID: {{ carta.id }}</p>
+            <button class="btn-add" (click)="adicionarAoColecao(carta)">+ Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensagem quando não tem cartas -->
+    <div *ngIf="!isLoading && cartasFiltradas.length === 0" class="empty-state">
+      <p>✨ Nenhuma carta encontrada</p>
+      <p *ngIf="termoBusca">Tente outro termo de busca</p>
+    </div>
+  </main>
+
+  <app-bottom-nav></app-bottom-nav>
+</div>

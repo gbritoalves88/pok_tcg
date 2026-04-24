@@ -656,3 +656,9 @@
     font-size: 12px;
   }
 }
+
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding-bottom: 80px; /* ← Adicione esta linha */
+}

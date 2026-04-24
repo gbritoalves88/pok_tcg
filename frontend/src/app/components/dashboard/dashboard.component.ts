@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { CartaService } from '../../services/carta.service';
 import { CartaCatalogo, CartaUsuario, ReconhecerResponse } from '../../models/carta.model';
 import { AuthService } from '../../services/auth.service';
+import { BottomNavComponent } from "../bottom-nav/bottom-nav.component";
+
 
 interface Carta {
   id?: string;
@@ -22,7 +24,7 @@ interface Carta {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BottomNavComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
