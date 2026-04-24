@@ -37,3 +37,10 @@ async def remover_carta(
     """Remove uma carta ou decrementa quantidade da coleção"""
     service = CartaService()
     return service.remover_carta(carta_id=carta_id, bearer=bearer)
+
+# app/routers/carta.py
+@router.get("/catalogo")
+async def listar_catalogo(bearer: str = Header(...)):
+    """Lista todas as cartas do catálogo"""
+    service = CartaService()
+    return service.buscar_catalogo(bearer=bearer)
