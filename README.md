@@ -8,6 +8,11 @@ O projeto é dividido em uma API REST desenvolvida com Python e FastAPI e uma ap
 
 **Repositório:** https://github.com/gbritoalves88/pok_tcg
 
+**Site:** https://pok-tcg.onrender.com/
+
+**Usuario:** teste@gmail.com
+
+**senha:** 123asd
 ---
 
 ## ✨ Funcionalidades
